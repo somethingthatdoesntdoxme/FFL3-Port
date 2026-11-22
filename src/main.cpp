@@ -281,6 +281,19 @@ int main(int argc, char** argv) {
         sndSfx(n < 0 ? 0x3b : item >= 0xd8 && item < 0xea ? 0x3d : 0x35);   // 0B:6D7E
     };
     field.giveItem = [&](int item) { receive(item); };
+    // Event $13 (00:15D3): 0B:706C takes one of the item off the bag (if there), then rst $18 $18
+    // (0B:6683): the slot 0 drop for race-0 members (not done yet, see RE_NOTES) and 66BB, which
+    // empties every bag slot whose count is 0.
+    field.takeItem = [&](int item) {
+        for (int i = 0; i < 24; i++) {
+            const size_t h = size_t(0xc6ff + i * 2);
+            if (battleRam[h] != uint8_t(item)) continue;
+            if (battleRam[h + 1]) battleRam[h + 1]--;
+            break;
+        }
+        for (int i = 0; i < 24; i++)
+            if (battleRam[size_t(0xc700 + i * 2)] == 0) battleRam[size_t(0xc6ff + i * 2)] = battleRam[size_t(0xc700 + i * 2)] = 0xff;
+    };
     // Save file: "FFL3SAV1", map, row, col, facing, vehicle, event + chest flags (32 bytes
     // each, MSB first), 5 party records, then the whole battle RAM image (inventory etc.).
     // 0F:79D4 (00:1E46): EXP each of members 0-3 needs for the next level -> wCD9D + 3i,

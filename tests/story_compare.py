@@ -101,13 +101,14 @@ for i, pc in enumerate(port):
         print(f'{pc["label"][:28]:28} {pdesc:22} {"-":22} {res}')
         continue
     edesc = f'{ec["map"]} {ec["pos"][0]},{ec["pos"][1]} f{ec["frame"]}'
-    probs = []
+    probs = []; notes = []
     if pc['kind'] != ec['kind'] or pc['label'] != ec['label']: probs.append(f'{pc["kind"]} {pc["label"]} vs {ec["kind"]} {ec["label"]}')
     if pc['map'] != ec['map'] or pc['pos'] != ec['pos']: probs.append('place')
     if pc['flags'] != ec['flags']: probs.append('flags port vs game: ' + flagdiff(pc['flags'], ec['flags']))
     if pc['bag'] != ec['bag']: probs.append(f'bag port {pc["bag"]} vs game {ec["bag"]}')
-    if pc['members'] != ec['members']: probs.append(f'members port {pc["members"]} vs game {ec["members"]}')
-    notes = []
+    if pc['members'] != ec['members']:                     # after battles that went differently (max HP
+        (notes if pc['maxhp'] != ec['maxhp'] else probs).append(   # differs too): a meat eaten etc. - a note
+            f'members port {pc["members"]} vs game {ec["members"]}')
     if pc['maxhp'] != ec['maxhp']: notes.append('(party ' + ' '.join(pc['party']) + ' vs ' + ' '.join(ec['party']) + ': random battles differ)')
     sd = shotdiff(pc['label']) if pc['kind'] != 'STEP' else None
     if sd is not None and sd > SHOT_LIMIT:

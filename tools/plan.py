@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Plan a walk for a story route: shortest path on one map, printed as a `go` step.
 
-usage: plan.py saga3.gb MAP ROW,COL (ROW,COL | exit | out | event N[,N] | attr XX | map XX) [--show] [--grid FILE]
+usage: plan.py saga3.gb MAP ROW,COL (ROW,COL | exit | out | event N[,N] | attr XX | map XX | list) [--show] [--grid FILE]
+
+list: every event block you can reach (exits with where they go), nearest first.
 
 Exits that warp within the same map are followed (multi-floor maps like towers); pitfalls are
 only used when they're the way to the goal. Exit blocks in a region with no exit entry do
@@ -55,7 +57,7 @@ EXITS = {}
 p_, e_ = r.ptr(6, 0x6308, m), r.ptr(6, 0x6308, m + 1)
 while p_ + 4 <= e_ and e_ - p_ <= 0x200:
     b = [r.b(6, p_ + i) for i in range(4)]
-    EXITS[(b[0] >> 4, b[0] & 15)] = (b[1], (b[2] & 0x7f) + 5, (b[3] & 0x7f) + 5)
+    EXITS.setdefault((b[0] >> 4, b[0] & 15), (b[1], (b[2] & 0x7f) + 5, (b[3] & 0x7f) + 5))   # the first match wins (13F1)
     p_ += 4
 def warp(y, x):
     """Where an event block sends you: (map, row, col) or None."""
@@ -80,6 +82,7 @@ def step(f, a):
     return (a & 0x47 & g & mask) == 0, g
 
 def is_goal(y, x):
+    if goal[0] == 'list': return False                     # explore everything (see the end)
     if goal[0] == 'exit': return (A[y][x] & 0xc0) == 0xc0 and (A[y][x] & 0x3f) <= 3
     if goal[0] == 'attr': return A[y][x] == int(goal[1], 16)
     if goal[0] == 'event': return (A[y][x] & 0xc0) == 0xc0 and (A[y][x] & 0x3f) in [int(v, 16) for v in goal[1].split(',')]
@@ -151,6 +154,16 @@ while q:
                 a = A[yy][xx]
                 g = 0x47 if (a & 0xc0) in (0xc0, 0x80) else layer(g, a)
             push((j[0], j[1], g, face), cur_st, 'J', c0 + 4)
+if goal[0] == 'list':                                     # every event block reachable, nearest first
+    seen = {}
+    for st, c in cost.items():
+        y, x = st[0], st[1]
+        a = A[y][x]
+        if (a & 0xc0) == 0xc0 and (y, x) != (sr, sc) and ((y, x) not in seen or c < seen[(y, x)]): seen[(y, x)] = c
+    for (y, x), c in sorted(seen.items(), key=lambda kv: kv[1]):
+        w = warp(y, x); a = A[y][x]
+        print(f'{y},{x}  attr {a:02X} (event {a & 0x3f:02X})  steps {c}' + (f'  -> map {w[0]:02X} {w[1] % 64},{w[2] % 64}' if w else ''))
+    sys.exit(0)
 if not end:
     print('no path', file=sys.stderr); sys.exit(1)
 path = []

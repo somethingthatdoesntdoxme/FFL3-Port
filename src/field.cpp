@@ -729,6 +729,7 @@ void Field::runEventCommand(int cmd, int param) {
         if (!flags_.test(1) && param >= 0x61)                          // 0F:7C74: story flag for it
             flags_.event.set(rom_.b(0xf, uint16_t(0x7c7e + param - 0x61)));
         return;
+    case 0x13: if (takeItem) takeItem(param); return;                 // 15d3: one off the bag (0B:706C), tidy (6683)
     case 0x1c: music = uint8_t(param); return;                          // 1a28
     case 0x1d: lastSfx = uint8_t(param); if (playSfx) playSfx(param); return;                        // 1a2e
     case 0x08: case 0x09:                                              // 14b2: pitfall: sound, fall, exit

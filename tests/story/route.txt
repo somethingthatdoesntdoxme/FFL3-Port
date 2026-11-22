@@ -336,3 +336,71 @@ go U22                                # up the deck (the lift), out through the 
 check temple_top_lara
 go D12                                # down the stairs: the step text (7A0D: flags $0F and $11) - the Elder
 check elder_lara                      # Lara left with the Elder (map 1A); "Cronos in Elan found something."
+
+== to Cronos in Elan (map 20/21)
+go D1 R1 D1                           # out of the Elder's house (C5: back to Dharm)
+check out_of_elders
+go D1 L1 D6 L1 D11                    # out of Dharm
+check out_of_dharm_lara
+keys S w40 D w10 A w30 A w30 A w30
+keys A w120
+check afloat_to_elan
+go D3 L10 U1 L1 U1 L14 U4 L1          # over to below Elan's gate
+settle
+keys B w30
+go U1
+check elan_lara
+go D9 L2 D2 L1 D8 L1 D7 R4 U3         # down the canal streets to Cronos's house (57,16)
+check cronos_house_lara
+go U9
+face U
+a                                     # Cronos: the Chaos Castle scene, the South Tower key
+check cronos_key
+
+== to the South Tower
+go D11
+check out_of_cronos_lara
+go D2 L4 U22 R3 U5
+check out_of_elan_lara
+keys S w40 D w10 A w30 A w30 A w30
+keys A w120
+check afloat_to_south_tower
+go R1 D11 R3 D4 R18 D1 R2 D6 L6       # down to the south island, below the tower door
+settle
+keys B w30
+check below_south_tower
+go U1
+check south_tower                     # the key opens it
+go U12                                # up the middle to the stairs (5,52)
+check south_tower_2f
+go U1 R1
+jump                                  # over the hole
+go R4 U1 R1 U3                        # to the stairs at 5,38
+check south_tower_3f
+go U1 L1
+jump                                  # the holes drop you a floor
+go L2
+jump
+go L1 D1 L1 D2 L1 D1
+jump                                  # over another (an object stands at 26,7)
+go L2 U4                              # 23,4 -> the middle room (24,24)
+go U1 R2 D3 R6 U3                     # 23,32 -> map 46
+check south_tower_4f                  # known: animated tiles (map hook 1) - their phase follows the frame count
+go U5
+check before_ashura                   # known: animated tiles (map hook 1) - their phase follows the frame count
+boost                                 # test helper: battle RNG
+face U
+a                                     # Ashura (and two warriors)
+check after_ashura                    # known: animated tiles (map hook 1) - their phase follows the frame count
+a                                     # the box left behind: the Chaos Key
+check chaos_key                       # known: animated tiles (map hook 1) - their phase follows the frame count
+
+== out of the South Tower
+go D6                                 # -> map 45 24,32
+check st_down_3f
+go D2 L2 U3 L6 D2                     # 25,24 -> the left room (24,4)
+go D2 R1                              # into the hole at 26,5: down to the 2nd floor (9,30)
+check st_fell_2f
+go D2                                 # the stairs at 11,30 -> the ground floor (6,52)
+go D12                                # out: the step text at 18,52
+check out_of_south_tower

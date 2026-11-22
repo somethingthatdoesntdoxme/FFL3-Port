@@ -87,6 +87,7 @@ public:
                                                               // formation | $80 = fixed counts
     std::function<void(int shop)> openShop;                   // event $17 (01:6FD4)
     std::function<void(int item)> giveItem;                   // event $18
+    std::function<void(int item)> takeItem;                   // event $13 (a key used up)
     std::function<void(int id)> playSfx;
     std::function<void(const char*)> onUnknownEvent;   // an event the port has no code for yet (logged for testers)
     bool wander = false;               // NPC random walks (01:4F66); off for headless tests
