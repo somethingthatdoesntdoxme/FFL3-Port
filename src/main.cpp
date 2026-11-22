@@ -1374,6 +1374,7 @@ int main(int argc, char** argv) {
                  !field.busy() && field.transition() == 0;
         v.free = v.loop && p.moveFrames == 0;
         v.shop = bool(shop);
+        v.stepping = p.moveFrames > 0;
         v.map = field.mapId(); v.row = p.row; v.col = p.col;
         char b[8];
         for (const auto* bits : {&flags.event, &flags.chest})     // wC760 and wC780, 32 bytes each
@@ -1384,6 +1385,13 @@ int main(int argc, char** argv) {
             }
         for (size_t i = 0; i < 4 && i < party.size(); i++)
             v.party += (i ? " " : "") + std::to_string(party[i].hp()) + "/" + std::to_string(party[i].maxHp());
+        v.bag = "g" + std::to_string(battleRam[0xc6e0] | battleRam[0xc6e1] << 8 | battleRam[0xc6e2] << 16) + ":";
+        for (int i = 0; i < 24; i++) {
+            const uint8_t id = battleRam[size_t(0xc6ff + i * 2)];
+            if (id == 0xff) continue;
+            char b[16]; std::snprintf(b, sizeof b, "%02X*%d,", id, battleRam[size_t(0xc700 + i * 2)]);
+            v.bag += b;
+        }
         if (dbgEnv("FFL3_STORYOBJ"))                              // debug: the actors too
             for (int i = 0; i < Field::kSlots; i++) {
                 const Actor& a = field.actors()[size_t(i)];

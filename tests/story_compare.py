@@ -3,8 +3,8 @@
 
 usage: tests/story_compare.py saga3.gb [route.txt] [--build build] [--port-only] [--keep DIR]
 
-Each CHECK line has map, position, event flags (wC760-C77F) and party HP/max. Map, position
-and flags must match; party HP is reported but only max HP is required to match (random
+Each CHECK line has map, position, event flags (wC760-C77F), gold and bag, and party HP/max.
+Map, position, flags and the bag must match; party HP is reported but only max HP is required to match (random
 encounters on the way differ). Exit 1 on any mismatch, or if either side fails the route.
 """
 import argparse, os, subprocess, sys, re
@@ -16,6 +16,7 @@ ap.add_argument('rom')
 ap.add_argument('route', nargs='?', default=os.path.join(here, 'story', 'route.txt'))
 ap.add_argument('--build', default=os.path.join(root, 'build'))
 ap.add_argument('--port-only', action='store_true')
+ap.add_argument('--dense', action='store_true', help='also compare place/flags/bag after every step (STEP lines)')
 ap.add_argument('--keep', default='/tmp/story_compare')
 a = ap.parse_args()
 os.makedirs(a.keep, exist_ok=True)
@@ -24,13 +25,14 @@ env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy')
 def parse(text):
     out = []
     for l in text.splitlines():
-        m = re.match(r'(CHECK|FAIL|DONE) (\S+) frame (\d+) map (\S+) pos (\d+),(\d+) flags (\S+) party (.*)', l)
+        m = re.match(r'(CHECK|STEP|FAIL|DONE) (\S+) frame (\d+) map (\S+) pos (\d+),(\d+) flags (\S+) bag (\S+) party (.*)', l)
         if m:
-            k, lab, fr, mp, r, c, fl, pa = m.groups()
-            out.append(dict(kind=k, label=lab, frame=int(fr), map=mp, pos=(int(r), int(c)), flags=fl,
+            k, lab, fr, mp, r, c, fl, bg, pa = m.groups()
+            out.append(dict(kind=k, label=lab, frame=int(fr), map=mp, pos=(int(r), int(c)), flags=fl, bag=bg,
                             party=pa.split(), maxhp=[p.split('/')[1] for p in pa.split()]))
     return out
 
+if a.dense: env['FFL3_STORYDENSE'] = '1'
 p = subprocess.run([os.path.join(a.build, 'ffl3'), os.path.abspath(a.rom), '--story', os.path.abspath(a.route)],
                    cwd=a.build, env=env, capture_output=True, text=True, timeout=3600)
 port = parse(p.stdout)
@@ -41,7 +43,8 @@ if not a.port_only:
         import pyboy  # noqa: F401
         e = subprocess.run([sys.executable, os.path.join(root, 'tools', 'story_emu.py'), os.path.abspath(a.rom),
                             os.path.abspath(a.route), os.path.join(a.keep, 'emu.log'),
-                            '--shots', os.path.join(a.keep, 'emu_shots')], capture_output=True, text=True, timeout=3600)
+                            '--shots', os.path.join(a.keep, 'emu_shots')], capture_output=True, text=True, timeout=3600,
+                           env=dict(os.environ, **({'FFL3_STORYDENSE': '1'} if a.dense else {})))
         emu = parse(open(os.path.join(a.keep, 'emu.log')).read())
     except ImportError:
         print('(PyBoy not installed: port only)')
@@ -102,18 +105,21 @@ for i, pc in enumerate(port):
     if pc['kind'] != ec['kind'] or pc['label'] != ec['label']: probs.append(f'{pc["kind"]} {pc["label"]} vs {ec["kind"]} {ec["label"]}')
     if pc['map'] != ec['map'] or pc['pos'] != ec['pos']: probs.append('place')
     if pc['flags'] != ec['flags']: probs.append('flags port vs game: ' + flagdiff(pc['flags'], ec['flags']))
+    if pc['bag'] != ec['bag']: probs.append(f'bag port {pc["bag"]} vs game {ec["bag"]}')
     notes = []
     if pc['maxhp'] != ec['maxhp']: notes.append('(party ' + ' '.join(pc['party']) + ' vs ' + ' '.join(ec['party']) + ': random battles differ)')
-    sd = shotdiff(pc['label'])
+    sd = shotdiff(pc['label']) if pc['kind'] != 'STEP' else None
     if sd is not None and sd > SHOT_LIMIT:
         if pc['label'] in known: notes.append(f'(screen {sd:.0%} different, known: {known[pc["label"]]})')
         else: probs.append(f'screen {sd:.0%} different (see {a.keep}/sbs/{pc["label"]}.png)')
     bad += bool(probs)
+    if pc['kind'] == 'STEP' and not probs: continue        # dense steps: only the ones that differ
     print(f'{pc["label"][:28]:28} {pdesc:22} {edesc:22} {"ok" if not probs else "DIFF: " + "; ".join(probs)}' + (' ' + ' '.join(notes) if notes else ''))
 if len(emu) > len(port): print(f'real game got {len(emu) - len(port)} checkpoints further: {emu[len(port)]["label"]}'); bad += 1
 if not port or port[-1]['kind'] != 'DONE': bad += 1
 last = port[-1] if port else None
 print()
-print(f'{len(port)} checkpoints, {"all match" if not bad else str(bad) + " problem(s)"}; port log {a.keep}/port.log'
+nstep = sum(1 for c in port if c['kind'] == 'STEP')
+print(f'{len(port) - nstep} checkpoints' + (f' + {nstep} steps' if nstep else '') + f', {"all match" if not bad else str(bad) + " problem(s)"}; port log {a.keep}/port.log'
       + ('' if a.port_only else f', game log {a.keep}/emu.log'))
 sys.exit(1 if bad else 0)

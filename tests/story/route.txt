@@ -124,9 +124,10 @@ go R1 D8 R18 U1                       # over the mountains to below the temple g
 settle
 keys B w30                            # down off the float
 check below_temple
+boost                                 # test helper: the fight's outcome is battle RNG - make it a sure win
 face U
 a                                     # the monster in the gap (flag 4F): fixed battle $16
-check after_boss                      # lost - everyone on 1 HP, flag 4F cleared, the monster gone
+check after_boss                      # flag 4F cleared, the monster gone
 
 == up the temple to the Talon
 go U4

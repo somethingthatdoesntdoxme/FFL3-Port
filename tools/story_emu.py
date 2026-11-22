@@ -88,21 +88,36 @@ def party():
         out.append('%d/%d' % (mem[b + 0x10] | mem[b + 0x11] << 8, mem[b + 0x12] | mem[b + 0x13] << 8))
     return ' '.join(out)
 
+def quiet_until_free(limit, need=2):                      # no keys: free for `need` frames running (or give up)
+    n = 0
+    while n < limit and free_run < need:
+        tick(); n += 1
+
+pending_step = ['']
+
 def mash_until_free(limit, start=False):
     n = 0
     while not free():
         if n >= limit: return False
         k = ()
-        if 8 <= n % 16 < 10 and free_run == 0: k = ('a', 'start') if start and (n // 16) % 4 == 3 else ('a',)
+        if n >= 32 and 8 <= n % 16 < 10 and free_run == 0 and mem[0xc6ef] == 0: k = ('a', 'start') if start and (n // 16) % 4 == 3 else ('a',)
         tick(k); n += 1
+    if pending_step[0]: emit('STEP', pending_step[0]); pending_step[0] = ''   # dense runs
     return True
 
 DIRS = {'U': 'up', 'D': 'down', 'L': 'left', 'R': 'right'}
 KEYS = {'A': 'a', 'B': 'b', 'S': 'start', 'E': 'select', **DIRS}
 
+def bag():                                                # wC6E0 gold, wC6FF: 24 (id, count) pairs
+    g = mem[0xc6e0] | mem[0xc6e1] << 8 | mem[0xc6e2] << 16
+    out = f'g{g}:'
+    for i in range(24):
+        if mem[0xc6ff + i * 2] != 0xff: out += f'{mem[0xc6ff + i * 2]:02X}*{mem[0xc700 + i * 2]},'
+    return out
+
 def emit(kind, label, extra=''):
     s = state()
-    line = f'{kind} {label} frame {frame} map {s["map"]:02X} pos {s["row"]},{s["col"]} flags {flags()} party {party()}{extra}'
+    line = f'{kind} {label} frame {frame} map {s["map"]:02X} pos {s["row"]},{s["col"]} flags {flags()} bag {bag()} party {party()}{extra}'
     print(line); log.write(line + '\n'); log.flush()
     if a.shots:
         os.makedirs(a.shots, exist_ok=True)
@@ -180,6 +195,7 @@ for ln, line in enumerate(steps, 1):
     elif op == 'face':                                    # face D: turn without moving (a tap)
         mash_until_free(20000)
         tick((DIRS[w[1][0]],)); tick()
+        quiet_until_free(60)                              # a turn: no A (it could talk)
         mash_until_free(20000)
     elif op == 'boost':                                   # test helper: HP 500, MP 200, str/def/mag/agi 60
         for i in range(5):
@@ -222,6 +238,8 @@ for ln, line in enumerate(steps, 1):
         emit('CHECK', f'{section}_{ln}')
     else:
         fail(f'line {ln} unknown step {op}')
+    if os.environ.get('FFL3_STORYDENSE') and op in ('go', 'face', 'a', 'shop', 'jump', 'settle'):
+        pending_step[0] = f'L{ln}'                        # dense runs: emitted when a later step finds it free (no frames added)
 emit('DONE', 'end')
 if os.environ.get('STORY_STATE'):                         # debug: keep where the route ended
     with open(os.environ['STORY_STATE'], 'wb') as f: pb.save_state(f)

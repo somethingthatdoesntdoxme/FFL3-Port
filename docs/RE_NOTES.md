@@ -457,3 +457,8 @@ Translated in src/battleanim.cpp (C++20 coroutines; 00:3A6D "wait a frames" = co
   letter shows on frame 29, then one every ~11 frames. Names (party, speakers, items, spells) are
   printed a letter at a time too (00:310F copies through the character routine). The port opened
   the box at once and dropped whole names in one step, so speech ran ~2x ahead around names.
+- Talon units (01:7C1B): each unit is taken from the bag (0B:706C, count - 1) and announced
+  before the next; the emptied slots only go after the last message (rst $18 $18 -> 0B:66BB:
+  count-0 slots become $FF/$FF in place). The port emptied the slot at once (the bag compare saw it).
+- wC6EF is the leader's step in pixels left (set to $10, - wC6F4 a frame); where the camera stops
+  at a map's edge the scroll is lined up while the step still runs, and step events wait for it.

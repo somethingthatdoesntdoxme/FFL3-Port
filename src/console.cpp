@@ -54,7 +54,7 @@ TalonConsole::TalonConsole(const Rom& rom, BattleRam& ram, GameFlags& flags) : r
         for (int i = 0; i < 24; i++) {                       // 0B:706C: take one from the bag
             const size_t h = size_t(0xc6ff + i * 2);
             if (ram_[h] != item || !ram_[h + 1]) continue;
-            if (--ram_[h + 1] == 0) { ram_[h] = 0xff; ram_[h + 1] = 0xff; }
+            --ram_[h + 1];                                   // the slot is emptied after the messages (0B:66BB)
             inBag = true;
             break;
         }
@@ -151,7 +151,14 @@ void TalonConsole::openSub(int option) {
 void TalonConsole::tick(const ConsoleInput& in) {
     switch (state_) {
     case State::Attach:
-        if (in.a || in.b) { attached_.erase(attached_.begin()); if (attached_.empty()) state_ = State::Menu; }
+        if (in.a || in.b) {
+            attached_.erase(attached_.begin());
+            if (attached_.empty()) {                          // 7C37: rst $18 $18 -> 0B:66BB: count-0 slots go
+                for (int i = 0; i < 24; i++)
+                    if (ram_[size_t(0xc700 + i * 2)] == 0) { ram_[size_t(0xc6ff + i * 2)] = 0xff; ram_[size_t(0xc700 + i * 2)] = 0xff; }
+                state_ = State::Menu;
+            }
+        }
         return;
     case State::Message:
         if (in.a || in.b) state_ = State::Menu;

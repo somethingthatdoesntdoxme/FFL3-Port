@@ -41,7 +41,7 @@ suites = [
                  None if a.vm_recs else 'needs --vm-recs'),
     ('tester',   [sys.executable, f'{here}/test_tester.py', exe, rom], None),
     ('autotest', [exe, rom, '--autotest'], None),
-    ('story',    [sys.executable, f'{here}/story_compare.py', rom, '--build', a.build], None),
+    ('story',    [sys.executable, f'{here}/story_compare.py', rom, '--build', a.build, '--dense'], None),
 ]
 skip = set(filter(None, a.skip.split(',')))
 only = set(filter(None, a.only.split(',')))
@@ -50,8 +50,10 @@ def count(out):
     lines = out.splitlines()
     ok = sum(1 for l in lines if l.startswith(('ok ', 'PASS')) or ' PASS' in l)
     bad = sum(1 for l in lines if l.startswith('FAIL') or ' FAIL' in l)
-    for l in lines:   # story_compare: "7 checkpoints, all match"
-        if 'checkpoints, all match' in l: ok = int(l.split()[0])
+    for l in lines:   # story_compare: "79 checkpoints + 100 steps, all match"
+        if 'checkpoints' in l and 'all match' in l:
+            w = l.replace(',', '').split()
+            ok = int(w[0]) + (int(w[3]) if len(w) > 3 and w[2] == '+' else 0)
     for l in lines:   # suites that print one summary line ("all 192 maps match")
         if l.startswith('all ') and ok == 0:
             ok = int(l.split()[1])

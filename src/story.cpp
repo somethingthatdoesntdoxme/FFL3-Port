@@ -25,7 +25,7 @@ void StoryPlayer::emit(const char* kind, const std::string& label) {
     char head[96];
     std::snprintf(head, sizeof head, "%s %s frame %llu map %02X pos %d,%d", kind, label.c_str(),
                   (unsigned long long)frame_, v_.map, v_.row, v_.col);
-    const std::string line = std::string(head) + " flags " + v_.flags + " party " + v_.party;
+    const std::string line = std::string(head) + " flags " + v_.flags + " bag " + v_.bag + " party " + v_.party;
     if (onLine) onLine(line, label);
 }
 
@@ -49,14 +49,19 @@ AnimTask StoryPlayer::press(uint8_t key, int n) {
     }
 }
 
+AnimTask StoryPlayer::quietUntilFree(int limit, int need) {
+    for (int n = 0; n < limit && freeRun_ < need; n++) co_await tick();
+}
+
 AnimTask StoryPlayer::mashUntilFree(int limit, bool start, bool* ok) {
     *ok = true;
     for (int n = 0; !isFree(); n++) {
         if (n >= limit) { *ok = false; co_return; }
         uint8_t k = 0;
-        if (n % 16 >= 8 && n % 16 < 10 && freeRun_ == 0) k = start && (n / 16) % 4 == 3 ? uint8_t(A | Start) : uint8_t(A);
+        if (n >= 32 && n % 16 >= 8 && n % 16 < 10 && freeRun_ == 0 && !v_.stepping) k = start && (n / 16) % 4 == 3 ? uint8_t(A | Start) : uint8_t(A);
         co_await tick(k);
     }
+    if (!pendingStep_.empty()) { emit("STEP", pendingStep_); pendingStep_.clear(); }   // dense runs
 }
 
 static uint8_t dirKey(char c) {
@@ -161,6 +166,7 @@ AnimTask StoryPlayer::run() {
             co_await mashUntilFree(20000, false, &ok);
             co_await tick(dirKey(s.w.size() > 1 ? s.w[1][0] : 'D'));
             co_await tick();
+            co_await quietUntilFree(60);                                 // a turn: no A (it could talk)
             co_await mashUntilFree(20000, false, &ok);
         } else if (op == "boost") {                                     // test helper: HP 500, MP 200, stats 60
             if (onCommand) onCommand("boost");
@@ -208,6 +214,12 @@ AnimTask StoryPlayer::run() {
             fail(at + " unknown step " + op);
             co_return;
         }
+        // Dense runs (FFL3_STORYDENSE): a STEP line after every step that ends free - no extra
+        // input, so the run plays exactly as without it.
+        static const bool dense = std::getenv("FFL3_STORYDENSE") != nullptr;
+        // (emitted the next time a step finds the game free - no frames added, so the run plays the same)
+        if (dense && (op == "go" || op == "face" || op == "a" || op == "shop" || op == "jump" || op == "settle"))
+            pendingStep_ = "L" + std::to_string(s.line);
     }
     emit("DONE", "end");
 }

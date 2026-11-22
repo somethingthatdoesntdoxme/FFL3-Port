@@ -21,9 +21,11 @@ struct StoryView {
     bool loop = false;          // the field main loop runs (no text, battle, menu, fade)
     bool free = false;          // ... and the leader stands on the grid: it would take a step now
     bool shop = false;          // a shop is open (01:6FD4)
+    bool stepping = false;      // the leader is mid-step (wC6EF != 0)
     int map = 0, row = 0, col = 0;
     std::string flags;          // wC760-C77F as hex
     std::string party;          // "hp/max ..." for members 1-4
+    std::string bag;            // "g<gold>:ID*N,..." (wC6E0 gold, wC6FF bag pairs)
 };
 
 class StoryPlayer {
@@ -58,6 +60,8 @@ private:
     bool isFree() const { return freeRun_ >= 2; }
     AnimTask run();
     AnimTask mashUntilFree(int limit, bool start, bool* ok);
+    AnimTask quietUntilFree(int limit, int need = 2);
+    std::string pendingStep_;                     // dense runs: the STEP line still to emit   // no keys: free for `need` frames running (or give up)
     AnimTask press(uint8_t key, int n);
     void emit(const char* kind, const std::string& label);
 };
