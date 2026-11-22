@@ -216,7 +216,7 @@ for ln, line in enumerate(steps, 1):
             mem[b + 1] = 0                                # +1 status (+0 is the race - see 0B:6683)
             for o in (0x10, 0x12): mem[b + o] = 500 & 0xff; mem[b + o + 1] = 500 >> 8
             for o in (0x14, 0x16): mem[b + o] = 200; mem[b + o + 1] = 0
-            for o in range(0x18, 0x1c): mem[b + o] = 60
+            for o in range(0x18, 0x1c): mem[b + o] = int(w[1]) if len(w) > 1 else 60   # boost N: stats N
     elif op == 'heal':                                    # test helper: full HP/MP, no status (records at C500)
         for i in range(5):
             b = 0xc500 + i * 0x60

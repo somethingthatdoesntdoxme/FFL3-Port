@@ -143,9 +143,19 @@ while q:
         ny, nx = (y + dy) % H, (x + dx) % W
         ok, g = step(f, A[ny][nx])
         if not ok or (ny, nx) in objs: continue
+        if (A[ny][nx] & 0xc0) == 0x80 and A[ny][nx] & 0x3c:   # a moving floor (01:4BF6): it carries you
+            cy, cx, n, cf = ny, nx, 0, d                      # its way (attr & 3) to its end; a new `go`
+            while (A[cy][cx] & 0xc0) == 0x80 and A[cy][cx] & 0x3c and n < 64:   # leg starts there
+                ky, kx = {0: (-1, 0), 1: (0, 1), 2: (1, 0), 3: (0, -1)}[A[cy][cx] & 3]
+                ty, tx = (cy + ky) % H, (cx + kx) % W
+                if not step(0x47, A[ty][tx])[0] or (ty, tx) in objs: break
+                cy, cx, n, cf = ty, tx, n + 1, 'URDL'[A[cy][cx] & 3]
+            push((cy, cx, 0x47, cf), cur_st, d + '|', c0 + 1)   # facing the way it carried you
+            continue
         push((ny, nx, g, d), cur_st, d, c0 + (6 if A[ny][nx] in (0xe0,) else 1))   # $20 hurts: avoid it
     if face:                                              # B: jump the way we face (01:47B2); costs more
         j = jump(y, x, f, face)
+        if j and (A[j[0]][j[1]] & 0xc0) == 0x80 and A[j[0]][j[1]] & 0x3c: j = None   # not onto a moving floor
         if j:                                             # the flags settle on each block passed (4E48)
             dy, dx = {'U': (-1, 0), 'D': (1, 0), 'L': (0, -1), 'R': (0, 1)}[face]
             g, yy, xx = f, y, x
@@ -174,6 +184,10 @@ end = end[:2]
 toks = []
 for d in path:
     if d == '|': toks.append(['|', 0]); continue          # a warp: the next leg starts afresh
+    if len(d) == 2 and d[1] == '|':                       # onto a moving floor, then carried
+        if toks and toks[-1][0] == d[0]: toks[-1][1] += 1
+        else: toks.append([d[0], 1])
+        toks.append(['|', 0]); continue
     if d == 'J': toks.append(['J', 0]); continue          # a jump
     if toks and toks[-1][0] == d: toks[-1][1] += 1
     else: toks.append([d, 1])

@@ -168,8 +168,8 @@ AnimTask StoryPlayer::run() {
             co_await tick();
             co_await quietUntilFree(60);                                 // a turn: no A (it could talk)
             co_await mashUntilFree(20000, false, &ok);
-        } else if (op == "boost") {                                     // test helper: HP 500, MP 200, stats 60
-            if (onCommand) onCommand("boost");
+        } else if (op == "boost") {                                     // test helper: HP 500, MP 200, stats 60 (or N)
+            if (onCommand) onCommand(s.w.size() > 1 ? "boost " + s.w[1] : std::string("boost"));
         } else if (op == "heal") {                                      // test helper: full HP/MP, no status
             if (onCommand) onCommand("heal");
         } else if (op == "npcs") {                                      // npcs still / wander

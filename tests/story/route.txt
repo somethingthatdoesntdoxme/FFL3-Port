@@ -424,3 +424,40 @@ check sea_bed
 == Chaos Castle (map 47), on the sea bed
 go D17 L11 D2 L2 D34 L2 D2 L2         # round the world's edge to the castle (45,19)
 check chaos_castle
+go U2 R3 U4 R2 U2                     # below the escalator (50,15)
+keys U16 w200                         # onto it ($84): it carries you up
+check escalator_top
+keys D4 R4 w30                        # a tap down onto it (it only carries you up), then off to the right
+check off_escalator
+go R1 U2 R2 U3                        # 39,19 -> 40,40
+go U1 R2 D6 L7 D1
+jump                                  # over the hole at 47,35
+go L2 U5                              # up the escalator ($84) at 43,33: it carries you to 39,33
+go L2 D1                              # down one ($86) at 40,31: to 42,31
+go D1 L2 D3                           # and another at 46,29: to 48,29
+jump                                  # over the holes at 49,29 and 51,29
+jump
+go D4 L2 U3                           # 53,27 -> map 48
+check chaos_48
+go U1 R2 D3 R5
+jump                                  # over the box (an object at 51,55)
+go R1 U1 R2 U5 L1 U1                  # 51,59 -> 42,61
+go L5 U9                              # to the door (33,56): the Chaos Key
+check chaos_door
+
+== the upper castle (map 49 on)
+go U8                                 # 50,32 -> the pillar room (49,13)
+go D1 L3 U13 L3 D2 L2 U3              # its north-west stairs (36,5) -> map 4A
+check chaos_4a
+go U1 R2 D3 R3 D11 R1 D2 R2 D2 R6 D2  # east, south, east: the stairs down (59,48) -> map 49 55,18
+check chaos_49_f4
+go D2 R2 U1 R4 U17 L2 U3                       # east, north: the stairs (36,22) -> map 4A 40,52
+check chaos_4a_f5
+go U1 L2 D2 L1 D9 L5 U3               # west, south: the central stairs (47,44) -> 58,60
+go U19                                # north: 39,60 -> 42,44
+go U2
+check before_chaos
+boost 99                              # test helper: Chaos stones the party - stats 99 to end it fast
+face U
+a                                     # Chaos (39,44)
+check after_chaos

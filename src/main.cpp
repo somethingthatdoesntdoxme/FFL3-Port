@@ -987,12 +987,13 @@ int main(int argc, char** argv) {
         }
         if (k == "boost") {                                     // test helper (story runs): a party that can win the
             int n = 0;                                          // story's fixed fights without grinding battles
+            const int st = line.size() > 6 ? std::clamp(std::atoi(line.c_str() + 6), 1, 99) : 60;   // boost N: stats N
             for (CharRecord& r : party) {
                 if (r.raw[3] == 0xff || r.maxHp() == 0) continue;
                 r.raw[1] = 0;                                   // +1 status (+0 is the race: low nibble 0 drops slot 0, 0B:6683)
                 r.raw[0x10] = r.raw[0x12] = 500 & 0xff; r.raw[0x11] = r.raw[0x13] = 500 >> 8;
                 r.raw[0x14] = r.raw[0x16] = 200; r.raw[0x15] = r.raw[0x17] = 0;
-                for (int o = 0x18; o <= 0x1b; o++) r.raw[size_t(o)] = 60;
+                for (int o = 0x18; o <= 0x1b; o++) r.raw[size_t(o)] = uint8_t(st);
                 n++;
             }
             return "boosted " + std::to_string(n);
