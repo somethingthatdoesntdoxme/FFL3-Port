@@ -243,7 +243,9 @@ void Field::setVehicle(int mode) {
 }
 
 void Field::timeWarp(int era) {
-    if (era == 1) { flags_.event.set(0x0e); flags_.event.reset(0x0f); }
+    // 01:6432 by unit: to the Past (643A) clears $0E/$0F, to the Future (644D) $0E off, $0F on;
+    // home to the Present (6460) sets $0E, and $0F = flag $56 (Dogra beaten: the Elder scene, 7A0D).
+    if (era == 1) { flags_.event.set(0x0e); flags_.event.set(0x0f, flags_.test(0x56)); }
     else if (era == 2) { flags_.event.reset(0x0e); flags_.event.reset(0x0f); }
     else if (era == 4) { flags_.event.reset(0x0e); flags_.event.set(0x0f); }
     // era 8 (Pureland): not seen yet
@@ -648,6 +650,19 @@ void Field::runEventCommand(int cmd, int param) {
             if (saved_.map >= 0) enterMap(saved_.map, saved_.row, saved_.col, p.facing);
             return;
         case 0xd: saved_ = {map_, p.row, p.col}; return;               // 15E6
+        case 0xa: {                                                    // 152C -> 01:664B: a preset return stack
+            // 01:66C1[p-1] -> depth*2, then per entry (top first) masks, row, col (blocks of
+            // scroll, so +5 for the leader), map. Also copied to wC7C9-CB: the bottom entry (01:41EC).
+            if (lo < 1 || lo > 8) return;
+            const uint16_t t = rom_.w(1, uint16_t(0x66c1 + (lo - 1) * 2));
+            const int n = rom_.b(1, t) / 2;
+            returnStack_.assign(size_t(n), Return{});
+            for (int i = 0; i < n; i++) {
+                const uint16_t e = uint16_t(t + 1 + i * 4);
+                returnStack_[size_t(n - 1 - i)] = {rom_.b(1, uint16_t(e + 3)), rom_.b(1, uint16_t(e + 1)) + 5, rom_.b(1, uint16_t(e + 2)) + 5};
+            }
+            return;
+        }
         default:
             std::snprintf(buf, sizeof buf, "event 10 sub %02X (not implemented)", param);
             lastEvent_ = buf;

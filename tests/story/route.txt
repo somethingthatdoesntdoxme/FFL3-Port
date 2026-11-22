@@ -264,3 +264,75 @@ keys A w60
 peek lara_0                            # the window wipes open, then a letter per wait
 a                                     # Lara (Dogra's spell): fixed battle $7F - beat her
 check after_lara
+
+
+== Dogra, behind Lara
+go U1 R4 D2                           # the stairs behind her (50,47)
+check to_dogra
+go D2 L1 D1 L1 D1 L1 D6 R3 U4         # round to below Dogra (45,15)
+check below_dogra
+boost                                 # test helper: battle RNG decides the fight - make it a sure win
+face U
+a                                     # Dogra and two witches
+check after_dogra
+go D4 L2 U1 L1 U7 R3 U3               # back up the stairs (39,15)
+check back_from_dogra
+== back out of the cavern with Lara
+go U1 L4 D2 L2 U4 L2 D2             # the pocket's warp at 48,39 -> map 43 34,7
+check cave_43_lara
+go D2 R11 D1 R4 U1 R1 U4 L8 U3          # 29,15 -> map 42 41,45
+go U3 R7 D3 R1 D1 R1 D14 L9 U3           # 53,45 -> 22,11
+go U2 R9 U15 L3 U1 L4 U3               # out of the cavern
+check out_of_cavern_lara
+keys S w40 D w10 A w30 A w30 A w30
+keys A w120
+check afloat_to_temple
+go R1 D7 R8 U1 R1 U2 R1 U14 L9 U4 L1    # round to the temple door
+settle
+keys B w30                            # down off the float
+check below_temple_past
+go U1
+check temple_past
+
+== the Talon home to the Present
+go U11
+check aboard_past
+go D22                                # down the deck: "Let's tell Granny about Lara." - then Granny's
+check granny_lara                     # map 27, the return stack preset (event 10 A4): Granny gives Dive
+face U
+a                                     # Granny: "Take good care of her." - Received Dive
+check dive
+
+== out of Granny's house (the preset stack: map 26, then map 04)
+go D6 R1 D2 L1 D3                     # round Cronos to the door
+check out_of_granny_lara
+go D2 L4 U17 R1 U5 R2 U5
+check out_of_town_lara
+keys S w40 D w10 A w30 A w30 A w30
+keys A w120
+check afloat_lara
+go R1 D5 R3 D5 R16 U4                 # to the temple door
+settle
+keys B w30
+go U1
+check temple_lara
+go U11
+check aboard_lara
+go D22                                # down the deck (the lift) to the bridge
+check bridge_lara
+go U1
+keys U20 w90                          # onto the seat: the cockpit
+peek cockpit_lara
+keys A w60 D w60 D w60 A w60          # past the message, down to Warp, in
+peek warp_menu_lara
+keys A w90                            # Past again: from the Past it means home
+peek to_present
+keys A w400                           # yes: the warp
+check in_the_present                  # flag 0E set again: the Present
+
+== out of the Talon into the Present, to Dharm
+go D3                                 # back to the deck
+go U22                                # up the deck (the lift), out through the swirl
+check temple_top_lara
+go D12                                # down the stairs: the step text (7A0D: flags $0F and $11) - the Elder
+check elder_lara                      # Lara left with the Elder (map 1A); "Cronos in Elan found something."

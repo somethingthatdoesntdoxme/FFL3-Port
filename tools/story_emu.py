@@ -133,10 +133,18 @@ def fail(why):
 
 steps = [l.split('#')[0].strip() for l in open(a.route)]
 section = 'start'
+# debug: STORY_RESUME=FILE:N loads a state saved by STORY_STATE (FILE) and carries on from route
+# line N; before it only the settings (battles, npcs) are applied. For exploring the real game.
+resume_from = 0
+if os.environ.get('STORY_RESUME'):
+    rf, rn = os.environ['STORY_RESUME'].rsplit(':', 1)
+    with open(rf, 'rb') as f: pb.load_state(f)
+    resume_from = int(rn)
 for ln, line in enumerate(steps, 1):
     if not line: continue
     w = line.split()
     op = w[0]
+    if ln < resume_from and op not in ('battles', 'npcs'): continue
     if op == '==':
         section = '_'.join(w[1:]); continue
     if op == 'new':                                       # title, naming, opening: until free
