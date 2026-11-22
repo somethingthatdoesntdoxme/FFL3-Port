@@ -181,6 +181,20 @@ for ln, line in enumerate(steps, 1):
         mash_until_free(20000)
         tick((DIRS[w[1][0]],)); tick()
         mash_until_free(20000)
+    elif op == 'boost':                                   # test helper: HP 500, MP 200, str/def/mag/agi 60
+        for i in range(5):
+            b = 0xc500 + i * 0x60
+            if mem[b + 3] == 0xff or (mem[b + 0x12] | mem[b + 0x13]) == 0: continue
+            mem[b] = 0
+            for o in (0x10, 0x12): mem[b + o] = 500 & 0xff; mem[b + o + 1] = 500 >> 8
+            for o in (0x14, 0x16): mem[b + o] = 200; mem[b + o + 1] = 0
+            for o in range(0x18, 0x1c): mem[b + o] = 60
+    elif op == 'heal':                                    # test helper: full HP/MP, no status (records at C500)
+        for i in range(5):
+            b = 0xc500 + i * 0x60
+            if mem[b + 3] == 0xff or (mem[b + 0x12] | mem[b + 0x13]) == 0: continue
+            mem[b] = 0
+            for o in (0x10, 0x14): mem[b + o] = mem[b + o + 2]; mem[b + o + 1] = mem[b + o + 3]
     elif op == 'npcs':                                    # npcs still / wander
         npcs_still[0] = len(w) > 1 and w[1] == 'still'
     elif op == 'battles':                                 # random encounters on / off

@@ -972,6 +972,29 @@ int main(int argc, char** argv) {
             field.encounters = line.find("off") == std::string::npos;
             return std::string(field.encounters ? "random battles on" : "random battles off");
         }
+        if (k == "boost") {                                     // test helper (story runs): a party that can win the
+            int n = 0;                                          // story's fixed fights without grinding battles
+            for (CharRecord& r : party) {
+                if (r.raw[3] == 0xff || r.maxHp() == 0) continue;
+                r.raw[0] = 0;
+                r.raw[0x10] = r.raw[0x12] = 500 & 0xff; r.raw[0x11] = r.raw[0x13] = 500 >> 8;
+                r.raw[0x14] = r.raw[0x16] = 200; r.raw[0x15] = r.raw[0x17] = 0;
+                for (int o = 0x18; o <= 0x1b; o++) r.raw[size_t(o)] = 60;
+                n++;
+            }
+            return "boosted " + std::to_string(n);
+        }
+        if (k == "heal") {                                      // test helper (story runs): everyone to full HP/MP, no status
+            int n = 0;
+            for (CharRecord& r : party) {
+                if (r.raw[3] == 0xff || r.maxHp() == 0) continue;
+                r.raw[0] = 0;
+                r.raw[0x10] = r.raw[0x12]; r.raw[0x11] = r.raw[0x13];
+                r.raw[0x14] = r.raw[0x16]; r.raw[0x15] = r.raw[0x17];
+                n++;
+            }
+            return "healed " + std::to_string(n);
+        }
         if (k == "npcs") {                                      // npcs still / wander (story runs: the real RNG can't be matched)
             field.npcsStill = line.find("still") != std::string::npos;
             return std::string(field.npcsStill ? "NPCs stand still" : "NPCs wander");

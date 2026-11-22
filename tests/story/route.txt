@@ -256,9 +256,10 @@ go D4 R7 D14 L9 D3
 go D2 R8 U2 R1 U16 L5 D1 L2 D1 L2 D2
 go D2 R8 D5 L4 U1 L12 U3
 check lara_pocket_again
+boost                                 # test helper: the party has been on 1 HP since the temple, and level 1
 go U1 R2 D4 R2 U1
 face U
 keys A w60
 peek lara_0                            # the window wipes open, then a letter per wait
-keys A w300
-peek lara_battle
+a                                     # Lara (Dogra's spell): fixed battle $7F - beat her
+check after_lara

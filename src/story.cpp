@@ -162,6 +162,10 @@ AnimTask StoryPlayer::run() {
             co_await tick(dirKey(s.w.size() > 1 ? s.w[1][0] : 'D'));
             co_await tick();
             co_await mashUntilFree(20000, false, &ok);
+        } else if (op == "boost") {                                     // test helper: HP 500, MP 200, stats 60
+            if (onCommand) onCommand("boost");
+        } else if (op == "heal") {                                      // test helper: full HP/MP, no status
+            if (onCommand) onCommand("heal");
         } else if (op == "npcs") {                                      // npcs still / wander
             if (onCommand) onCommand("npcs " + (s.w.size() > 1 ? s.w[1] : std::string("wander")));
         } else if (op == "battles") {                                   // random encounters on / off
