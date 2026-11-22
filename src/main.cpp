@@ -976,7 +976,7 @@ int main(int argc, char** argv) {
             int n = 0;                                          // story's fixed fights without grinding battles
             for (CharRecord& r : party) {
                 if (r.raw[3] == 0xff || r.maxHp() == 0) continue;
-                r.raw[0] = 0;
+                r.raw[1] = 0;                                   // +1 status (+0 is the race: low nibble 0 drops slot 0, 0B:6683)
                 r.raw[0x10] = r.raw[0x12] = 500 & 0xff; r.raw[0x11] = r.raw[0x13] = 500 >> 8;
                 r.raw[0x14] = r.raw[0x16] = 200; r.raw[0x15] = r.raw[0x17] = 0;
                 for (int o = 0x18; o <= 0x1b; o++) r.raw[size_t(o)] = 60;
@@ -988,7 +988,7 @@ int main(int argc, char** argv) {
             int n = 0;
             for (CharRecord& r : party) {
                 if (r.raw[3] == 0xff || r.maxHp() == 0) continue;
-                r.raw[0] = 0;
+                r.raw[1] = 0;                                   // +1 status (+0 is the race: low nibble 0 drops slot 0, 0B:6683)
                 r.raw[0x10] = r.raw[0x12]; r.raw[0x11] = r.raw[0x13];
                 r.raw[0x14] = r.raw[0x16]; r.raw[0x15] = r.raw[0x17];
                 n++;
@@ -1385,6 +1385,11 @@ int main(int argc, char** argv) {
             }
         for (size_t i = 0; i < 4 && i < party.size(); i++)
             v.party += (i ? " " : "") + std::to_string(party[i].hp()) + "/" + std::to_string(party[i].maxHp());
+        for (size_t i = 0; i < 5 && i < party.size(); i++) {      // record +3 who, +$40-$4F the items
+            char b[8]; std::snprintf(b, sizeof b, "%02X/", party[i].raw[3]);
+            v.members += (i ? "," : "") + std::string(b);
+            for (int k = 0; k < 16; k++) { std::snprintf(b, sizeof b, "%02X", party[i].raw[size_t(0x40 + k)]); v.members += b; }
+        }
         v.bag = "g" + std::to_string(battleRam[0xc6e0] | battleRam[0xc6e1] << 8 | battleRam[0xc6e2] << 16) + ":";
         for (int i = 0; i < 24; i++) {
             const uint8_t id = battleRam[size_t(0xc6ff + i * 2)];

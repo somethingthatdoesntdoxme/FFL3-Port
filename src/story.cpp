@@ -25,7 +25,7 @@ void StoryPlayer::emit(const char* kind, const std::string& label) {
     char head[96];
     std::snprintf(head, sizeof head, "%s %s frame %llu map %02X pos %d,%d", kind, label.c_str(),
                   (unsigned long long)frame_, v_.map, v_.row, v_.col);
-    const std::string line = std::string(head) + " flags " + v_.flags + " bag " + v_.bag + " party " + v_.party;
+    const std::string line = std::string(head) + " flags " + v_.flags + " bag " + v_.bag + " members " + v_.members + " party " + v_.party;
     if (onLine) onLine(line, label);
 }
 

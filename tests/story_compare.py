@@ -25,10 +25,10 @@ env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy')
 def parse(text):
     out = []
     for l in text.splitlines():
-        m = re.match(r'(CHECK|STEP|FAIL|DONE) (\S+) frame (\d+) map (\S+) pos (\d+),(\d+) flags (\S+) bag (\S+) party (.*)', l)
+        m = re.match(r'(CHECK|STEP|FAIL|DONE) (\S+) frame (\d+) map (\S+) pos (\d+),(\d+) flags (\S+) bag (\S+) members (\S+) party (.*)', l)
         if m:
-            k, lab, fr, mp, r, c, fl, bg, pa = m.groups()
-            out.append(dict(kind=k, label=lab, frame=int(fr), map=mp, pos=(int(r), int(c)), flags=fl, bag=bg,
+            k, lab, fr, mp, r, c, fl, bg, mb, pa = m.groups()
+            out.append(dict(kind=k, label=lab, frame=int(fr), map=mp, pos=(int(r), int(c)), flags=fl, bag=bg, members=mb,
                             party=pa.split(), maxhp=[p.split('/')[1] for p in pa.split()]))
     return out
 
@@ -106,6 +106,7 @@ for i, pc in enumerate(port):
     if pc['map'] != ec['map'] or pc['pos'] != ec['pos']: probs.append('place')
     if pc['flags'] != ec['flags']: probs.append('flags port vs game: ' + flagdiff(pc['flags'], ec['flags']))
     if pc['bag'] != ec['bag']: probs.append(f'bag port {pc["bag"]} vs game {ec["bag"]}')
+    if pc['members'] != ec['members']: probs.append(f'members port {pc["members"]} vs game {ec["members"]}')
     notes = []
     if pc['maxhp'] != ec['maxhp']: notes.append('(party ' + ' '.join(pc['party']) + ' vs ' + ' '.join(ec['party']) + ': random battles differ)')
     sd = shotdiff(pc['label']) if pc['kind'] != 'STEP' else None

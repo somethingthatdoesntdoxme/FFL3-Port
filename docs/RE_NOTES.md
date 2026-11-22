@@ -462,3 +462,16 @@ Translated in src/battleanim.cpp (C++20 coroutines; 00:3A6D "wait a frames" = co
   count-0 slots become $FF/$FF in place). The port emptied the slot at once (the bag compare saw it).
 - wC6EF is the leader's step in pixels left (set to $10, - wC6F4 a frame); where the camera stops
   at a map's edge the scroll is lined up while the step still runs, and step events wait for it.
+
+### rst $18 $18 = 0B:6683 (slot 0 tidy) and record +0
+
+- Party record +0 is the race byte: bit 7 = Auto, low nibble = race (1 for the starting
+  humans). +1 is the status. The story helpers `heal`/`boost` used to zero +0 by mistake.
+- 0B:6683, for each member (records via 00:1FC4: wC500 + $60 n out of battle, wD000 + $80 n in
+  battle when wCD37 != 0): if +0 & $0F == 0 and item slot 0 (+$40) isn't empty, slot 0 goes
+  to $FF and the item goes to the bag (wCE26 item, wCE25 = 1, rst $18 $A8 = 0B:7124). Then
+  0B:66BB clears bag slots whose count is 0.
+- Callers: 0B:5D96 (start of the command phase in battle), 09:40AF, 00:15DB, 00:254D and the
+  Talon console attach (01:7C37). The port only does the 66BB half so far - the slot 0 drop
+  only matters for a race-0 member (not hit on the story route yet).
+- Found by the story compare's new `members` field (who + the 16 item bytes of each record).

@@ -115,9 +115,13 @@ def bag():                                                # wC6E0 gold, wC6FF: 2
         if mem[0xc6ff + i * 2] != 0xff: out += f'{mem[0xc6ff + i * 2]:02X}*{mem[0xc700 + i * 2]},'
     return out
 
+def members():                                            # wC500 + $60 n: +3 who, +$40-$4F items
+    return ','.join(f'{mem[0xc500 + i * 0x60 + 3]:02X}/' + ''.join(f'{mem[0xc540 + i * 0x60 + k]:02X}' for k in range(16))
+                    for i in range(5))
+
 def emit(kind, label, extra=''):
     s = state()
-    line = f'{kind} {label} frame {frame} map {s["map"]:02X} pos {s["row"]},{s["col"]} flags {flags()} bag {bag()} party {party()}{extra}'
+    line = f'{kind} {label} frame {frame} map {s["map"]:02X} pos {s["row"]},{s["col"]} flags {flags()} bag {bag()} members {members()} party {party()}{extra}'
     print(line); log.write(line + '\n'); log.flush()
     if a.shots:
         os.makedirs(a.shots, exist_ok=True)
@@ -201,7 +205,7 @@ for ln, line in enumerate(steps, 1):
         for i in range(5):
             b = 0xc500 + i * 0x60
             if mem[b + 3] == 0xff or (mem[b + 0x12] | mem[b + 0x13]) == 0: continue
-            mem[b] = 0
+            mem[b + 1] = 0                                # +1 status (+0 is the race - see 0B:6683)
             for o in (0x10, 0x12): mem[b + o] = 500 & 0xff; mem[b + o + 1] = 500 >> 8
             for o in (0x14, 0x16): mem[b + o] = 200; mem[b + o + 1] = 0
             for o in range(0x18, 0x1c): mem[b + o] = 60
@@ -209,7 +213,7 @@ for ln, line in enumerate(steps, 1):
         for i in range(5):
             b = 0xc500 + i * 0x60
             if mem[b + 3] == 0xff or (mem[b + 0x12] | mem[b + 0x13]) == 0: continue
-            mem[b] = 0
+            mem[b + 1] = 0                                # +1 status (+0 is the race - see 0B:6683)
             for o in (0x10, 0x14): mem[b + o] = mem[b + o + 2]; mem[b + o + 1] = mem[b + o + 3]
     elif op == 'npcs':                                    # npcs still / wander
         npcs_still[0] = len(w) > 1 and w[1] == 'still'

@@ -26,6 +26,7 @@ struct StoryView {
     std::string flags;          // wC760-C77F as hex
     std::string party;          // "hp/max ..." for members 1-4
     std::string bag;            // "g<gold>:ID*N,..." (wC6E0 gold, wC6FF bag pairs)
+    std::string members;        // per record (wC500 + $60 n): "who/items" - who joined, what they carry
 };
 
 class StoryPlayer {
