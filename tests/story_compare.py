@@ -83,6 +83,15 @@ def shotdiff(label):
     return d
 
 SHOT_LIMIT = 0.08          # more than 8% of the screen different: flag it (animation phases differ a bit)
+ANIM_LIMIT = 0.40          # maps with a tile animation hook (sea, lava...): the phase follows the frame
+                           # count, which differs - up to 40% is a note
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+try:
+    from ffl3data import Rom as _Rom
+    _rom = _Rom(a.rom)
+    def animated(mp): return _rom.map_header(int(mp, 16))['hook'] != 0
+except Exception:
+    def animated(mp): return False
 bad = 0
 # Checkpoints whose screen is known to differ: '# known: ...' on the check line (a note, not a failure).
 known = {}
@@ -113,6 +122,7 @@ for i, pc in enumerate(port):
     sd = shotdiff(pc['label']) if pc['kind'] != 'STEP' else None
     if sd is not None and sd > SHOT_LIMIT:
         if pc['label'] in known: notes.append(f'(screen {sd:.0%} different, known: {known[pc["label"]]})')
+        elif sd <= ANIM_LIMIT and animated(pc['map']): notes.append(f'(screen {sd:.0%} different: animated tiles)')
         else: probs.append(f'screen {sd:.0%} different (see {a.keep}/sbs/{pc["label"]}.png)')
     bad += bool(probs)
     if pc['kind'] == 'STEP' and not probs: continue        # dense steps: only the ones that differ

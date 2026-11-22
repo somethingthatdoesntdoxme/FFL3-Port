@@ -803,7 +803,7 @@ int main(int argc, char** argv) {
                 MenuInput in;
                 in.a = c == 'A'; in.b = c == 'B'; in.up = c == 'U'; in.down = c == 'D';
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
                 continue;
             }
             if (shop) {                                 // A / B / U / D drive an open shop
@@ -816,7 +816,7 @@ int main(int argc, char** argv) {
             }
             if (c == 'A' || c == 'a') {
                 if (text.active()) text.tick(true, true, false, false);
-                else if (!field.boardTalon()) talk(rom, field, text, chest, openShop);
+                else if (!field.boardTalon() && !field.submerge()) talk(rom, field, text, chest, openShop);
                 for (int i = 0; i < 40; i++) { field.tick(-1); text.tick(false, false, false, false); }
                 continue;
             }
@@ -1633,7 +1633,7 @@ int main(int argc, char** argv) {
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;
                 in.left = left && !leftPrev; in.right = right && !rightPrev;
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
             } else if (shop) {
                 ShopInput in;
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;
@@ -1661,7 +1661,7 @@ int main(int argc, char** argv) {
                 refreshTiles();
                 tiles.animate(field.header().hook, hff93);              // 00:3549: the text wait runs it too
             } else {
-                if (aPressed && !field.player().moveFrames && field.boardTalon()) {}
+                if (aPressed && !field.player().moveFrames && (field.boardTalon() || field.submerge())) {}
                 else if (aPressed && !field.player().moveFrames) talk(rom, field, text, chest, openShop);
                 else if (bHeld && !bPrev && field.land()) {}            // B in the air: land (01:4250)
                 else if (bHeld && !bPrev && field.tryJump()) {}         // B on foot: jump (01:47B2)

@@ -404,3 +404,23 @@ check st_fell_2f
 go D2                                 # the stairs at 11,30 -> the ground floor (6,52)
 go D12                                # out: the step text at 18,52
 check out_of_south_tower
+
+== learn Dive (Item: the 3rd slot, mark it, A again, the leader)
+keys S w40 A w30 D w10 D w10
+peek item_dive
+keys A w30 A w30 A w30                # mark it, again, the leader learns it
+keys A w30 B w30 B w30
+check dive_learnt
+
+== Dive (Magic: the leader's 2nd spell; water in front, 01:4132)
+go R6 D3                              # to the south shore (water at 54,36)
+face D
+keys S w40 D w10 A w30 A w30 D w10 A w30 A w30
+keys w120
+check diving                          # known: the sea is animated (its phase follows the frame count)
+a                                     # A on the bubble: down to the sea bed (map 06, the same place)
+check sea_bed
+
+== Chaos Castle (map 47), on the sea bed
+go D17 L11 D2 L2 D34 L2 D2 L2         # round the world's edge to the castle (45,19)
+check chaos_castle

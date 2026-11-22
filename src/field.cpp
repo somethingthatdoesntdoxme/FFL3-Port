@@ -201,7 +201,7 @@ bool Field::tryJump() {
 }
 
 bool Field::busy() const {
-    if (!walks_.empty() || !glides_.empty() || flash_ || trans_ || spin_ || jump_ || floatDrop_ || liftStep_ >= 0 || warp_) return true;
+    if (!walks_.empty() || !glides_.empty() || flash_ || trans_ || spin_ || jump_ || floatDrop_ || liftStep_ >= 0 || warp_ || stepVehicle_ >= 0) return true;
     for (int i = 1; i < kSlots; i++)
         if (actors_[size_t(i)].moveFrames && !actors_[size_t(i)].wandering) return true;
     return false;
@@ -256,12 +256,21 @@ void Field::timeWarp(int era) {
 bool Field::canCast(uint8_t id) const {
     switch (id) {
     case 0x21: return vehicle_ == 0 && map_ >= 2 && map_ <= 5;   // 40D6: 0008, then 418A
-    default: return false;                                        // $20 $25 $1B $2C: not yet
+    case 0x20: {                                                  // 4132: on foot, a world map, and
+        if (vehicle_ != 0 || map_ < 2 || map_ > 5) return false;  // water in front (4177: attr & $E4 = $40)
+        const Actor& p = actors_[0];
+        return (attrAt(p.row + kDr[int(p.facing)], p.col + kDc[int(p.facing)]) & 0xe4) == 0x40;
+    }
+    default: return false;                                        // $25 $1B $2C: not yet
     }
 }
 
 void Field::cast(uint8_t id) {
     if (id == 0x21) floatDrop_ = 36;                              // 4049 -> 4063 (40C2: $24 frames)
+    if (id == 0x20) {                                             // 40E1: a step onto the water (no wall
+        startMove(0, actors_[0].facing, true, speedPx(leaderSpeed_));   // check), then 4182: vehicle 2
+        stepVehicle_ = 2;
+    }
 }
 
 void Field::takeOff(int mode) {
@@ -270,6 +279,24 @@ void Field::takeOff(int mode) {
     enterMap(saved_.map, saved_.row, saved_.col, d);
     setVehicle(mode);
     lastEvent_ = "took off";
+}
+
+// 00:0949: A on the Dive bubble: 0935 [2 3 4 5 6 6 7 8] -> 093D [6 6 7 8 2 3 4 5], same place
+// (the sea bed $06-$08 under the world maps); back up to $02 means $03 once flag $0E is set.
+bool Field::submerge() {
+    if (vehicle_ != 2 || actors_[0].moveFrames || busy()) return false;
+    static const uint8_t from[8] = {2, 3, 4, 5, 6, 6, 7, 8}, to[8] = {6, 6, 7, 8, 2, 3, 4, 5};
+    for (int i = 0; i < 8; i++) {
+        if (from[i] != map_) continue;
+        int m = to[i];
+        if (m == 2 && flags_.test(0x0e)) m = 3;
+        const Actor& p = actors_[0];
+        trans_ = kTransition;
+        enterMap(m, p.row, p.col, p.facing);                     // 027D: the map load, the scroll kept
+        lastEvent_ = m >= 6 ? "submerged" : "surfaced";
+        return true;
+    }
+    return false;
 }
 
 // 01:631A: A on foot on the Talon's parking spot: go aboard (map $10, scroll ($20, $B0)).
@@ -294,7 +321,19 @@ bool Field::land() {
         lastEvent_ = "off the float";
         return true;
     }
-    if (vehicle_ < 2 || actors_[0].moveFrames) return false;    // 00:0861: modes 2-8 -> 01:4250
+    if (vehicle_ == 2) {                                         // 00:0861 -> 01:4272: the Dive bubble
+        if (actors_[0].moveFrames || busy()) return false;
+        if (map_ >= 6 && map_ <= 8) return true;                 // 4198: not on the sea bed
+        const Actor& p = actors_[0];
+        const uint8_t a = attrAt(p.row + kDr[int(p.facing)], p.col + kDc[int(p.facing)]);
+        flags_.event.set(0x04);                                  // 42E2: land in front, else flag 4 stays
+        if (!(a <= 2 || (a & 0xfc) == 0x88)) return true;
+        flags_.event.reset(0x04);
+        startMove(0, p.facing, true, speedPx(leaderSpeed_));     // a step ashore, then 4307: on foot
+        stepVehicle_ = 0;
+        return true;
+    }
+    if (vehicle_ < 3 || actors_[0].moveFrames) return false;    // 00:0861: modes 3-8 -> 01:4250
     const Actor& p = actors_[0];
     saved_ = {map_, p.row, p.col};                             // 4250: wC6E4 -> wC6E9
     setVehicle(0);
@@ -399,6 +438,11 @@ void Field::tick(int dir) {
         lastEvent_ = "float";
     }
     for (Actor& a : actors_) a.animTick++;
+    if (stepVehicle_ >= 0 && actors_[0].moveFrames == 0) {
+        setVehicle(stepVehicle_);
+        lastEvent_ = stepVehicle_ ? "dive" : "off the bubble";
+        stepVehicle_ = -1;
+    }
     if (flash_ && --flash_ == 0 && liftStep_ >= 0) {                    // the lift's step, after its flashes
         startMove(0, Dir(liftStep_), true, speedPx(leaderSpeed_));
         liftStep_ = -1;

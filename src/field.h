@@ -102,7 +102,8 @@ public:
     bool canCast(uint8_t id) const;
     void cast(uint8_t id);
     bool land();                       // B in the Talon: 01:4250 -> into the Talon (map $10)
-    bool boardTalon();                 // A on its parking spot: 01:631A
+    bool boardTalon();
+    bool submerge();                   // A on the Dive bubble (00:0949): the sea and the sea bed swap                 // A on its parking spot: 01:631A
     void setVehicle(int mode);         // wC6E3 + 00:08AD: leader sprite / animation for the mode
     std::function<void(int slot, int character)> joinParty;    // event $10 1x/2x (0B:6DE4)
     std::function<void(int slot)> leaveParty;                  // event $10 0x (0B:6E33)
@@ -148,6 +149,7 @@ private:
     int flash_ = 0;
     unsigned liftUses_ = 0;            // wCA58
     int liftStep_ = -1;                // the lift's step, waiting for the flashes
+    int stepVehicle_ = -1;             // a forced step, then this vehicle: Dive (01:40E1), off the bubble (4272)
     // Events $12 $08/$09 (00:190D / 1950): the leader spins for 160 frames, facing from
     // 01:53FF (frame counter >> 3 & 3: up, right, down, left). $08 also flings them 2 px a frame
     // up the screen for 80 frames and back (wC210, the leader's screen Y; the camera stays put).
