@@ -619,3 +619,17 @@ go U4 R1 U5 R2                        # below Dr. Pulcer (21,58)
 face U
 a                                     # Dr. Pulcer: the Radio
 check radio
+
+== the Rocket from the pier north of the Talon shrine
+go D1 L2 D6 L1 D3
+check out_of_pulcer
+keys A w60                            # up to the sea (map 05)
+check surfaced_future
+go D8 L5 D2 L2 D8 L19                 # round to below the shrine
+face U
+keys B w60                            # ashore (34,30)
+go U2 L1 U3 R2 U5                     # round the shrine and up the pier (24,31)
+check pier
+keys S w40 A w30 D w10 D w10 A w30 A w30   # Item: the Rocket (with the Radio, on the pier: 0F:7D0E)
+peek rocket
+check launched                        # "Now!!" - up to Floatland

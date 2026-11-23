@@ -434,6 +434,34 @@ int main(int argc, char** argv) {
             });
         menu->playSfx = [&](int id) { sndSfx(id); };
         menu->canCast = [&](uint8_t id) { return field.canCast(id); };
+        menu->keyItem = [&](uint8_t id) -> uint16_t {              // 0F:7CB0
+            auto slot = [&](uint8_t it) -> int {                  // rst $18 $0E as a "have it?" check
+                for (int i = 0; i < 24; i++) if (battleRam[size_t(0xc6ff + i * 2)] == it && battleRam[size_t(0xc700 + i * 2)]) return i;
+                return -1;
+            };
+            const Actor& p = field.player();
+            const int map = field.mapId(), veh = field.vehicle();
+            if (id == 0xf5) {                                     // 7CEC: in map $7F it's used up
+                if (map != 0x7f) return 0;
+                const int i = slot(0xf5);
+                if (i >= 0) battleRam[size_t(0xc6ff + i * 2)] = battleRam[size_t(0xc700 + i * 2)] = 0xff;
+                flags.event.reset(0xb6); flags.event.set(0xa9);
+                return 0x686f;
+            }
+            if (id == 0xe8) {                                     // 7D0E: the Rocket - with the Radio, on
+                if (slot(0xe9) < 0 || veh != 0 || map != 5 || p.row != 24 || p.col != 31) return 0;   // the pier
+                return 0x695f;                                    // (1D90: the map's objects again - TODO)
+            }
+            if (id > 0xe8) {                                      // 7CBB: the Radio, in map 0
+                if (map != 0) return 0;
+                return slot(0xe7) >= 0 && slot(0xe3) >= 0 ? 0x6988 : 0x61ae;
+            }
+            if (flags.test(0xcf) || flags.test(0xbb) || veh != 0) return 0;   // 7D42: $E7
+            if (map != 0 && map != 5 && map != 1) return 0;
+            if (!flags.test(0xe1)) return 0;
+            flags.event.set(0x82);                                // (hFFBC = $2B)
+            return 0x4000;
+        };
     };
     auto chest = [&](int slot, const MapObject& o) {           // 00:09D7
         const int k = o.id - 1;
@@ -803,7 +831,7 @@ int main(int argc, char** argv) {
                 MenuInput in;
                 in.a = c == 'A'; in.b = c == 'B'; in.up = c == 'U'; in.down = c == 'D';
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
                 continue;
             }
             if (shop) {                                 // A / B / U / D drive an open shop
@@ -1634,7 +1662,7 @@ int main(int argc, char** argv) {
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;
                 in.left = left && !leftPrev; in.right = right && !rightPrev;
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
             } else if (shop) {
                 ShopInput in;
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;

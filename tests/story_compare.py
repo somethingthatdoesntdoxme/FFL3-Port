@@ -83,8 +83,8 @@ def shotdiff(label):
     return d
 
 SHOT_LIMIT = 0.08          # more than 8% of the screen different: flag it (animation phases differ a bit)
-ANIM_LIMIT = 0.40          # maps with a tile animation hook (sea, lava...): the phase follows the frame
-                           # count, which differs - up to 40% is a note
+ANIM_LIMIT = 0.75          # maps with a tile animation hook (sea, lava...): the phase follows the frame
+                           # count, which differs - up to 75% (all sea) is a note
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
 try:
     from ffl3data import Rom as _Rom

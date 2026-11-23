@@ -28,6 +28,10 @@ public:
     // place check (01:40D6 ...); once cast the menu closes and fieldSpell() says which to run.
     std::function<bool(uint8_t id)> canCast;
     uint8_t fieldSpell() const { return fieldSpell_; }
+    // 09:4DB4: key items used from the bag ($E8 Rocket, $E9 Radio, $E7, $F5). keyItem(id) is
+    // 0F:7CB0: the text script to run once the menu closes (0A:addr), or 0 = can't use it here.
+    std::function<uint16_t(uint8_t id)> keyItem;
+    uint16_t keyText() const { return keyText_; }
 
 private:
     enum class State { Top, Member, Slots, Bag, Items, Spells, Target, Learn, Talents, Status, Auto, Save, Message, Done };
@@ -43,6 +47,7 @@ private:
     void say(const std::string& l1, const std::string& l2, State next) { message_ = l1; message2_ = l2; messageG_.clear(); overParty_ = false; next_ = next; state_ = State::Message; }
     void learn(int member);                    // 09:4C4F: a spell from the bag
     uint8_t fieldSpell_ = 0;
+    uint16_t keyText_ = 0;
     uint8_t learnId_ = 0;
     int learnSlot_ = -1;                       // its bag slot
     Glyphs messageG_;                          // a message in game glyphs (an item name in it)

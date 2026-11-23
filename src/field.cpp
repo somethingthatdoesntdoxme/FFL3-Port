@@ -201,7 +201,7 @@ bool Field::tryJump() {
 }
 
 bool Field::busy() const {
-    if (!walks_.empty() || !glides_.empty() || flash_ || trans_ || spin_ || jump_ || floatDrop_ || liftStep_ >= 0 || warp_ || stepVehicle_ >= 0) return true;
+    if (!walks_.empty() || !glides_.empty() || flash_ || trans_ || spin_ || jump_ || floatDrop_ || liftStep_ >= 0 || warp_ || stepVehicle_ >= 0 || pause_) return true;
     for (int i = 1; i < kSlots; i++)
         if (actors_[size_t(i)].moveFrames && !actors_[size_t(i)].wandering) return true;
     return false;
@@ -438,6 +438,7 @@ void Field::tick(int dir) {
         lastEvent_ = "float";
     }
     for (Actor& a : actors_) a.animTick++;
+    if (pause_) pause_--;
     if (stepVehicle_ >= 0 && actors_[0].moveFrames == 0) {
         setVehicle(stepVehicle_);
         lastEvent_ = stepVehicle_ ? "dive" : "off the bubble";
@@ -748,6 +749,7 @@ void Field::runEventCommand(int cmd, int param) {
             lastEvent_ = param == 0x08 ? "spin and fling (event 12 08)" : "spin (event 12 09)";
             p.facing = Dir::Up;
             return;
+        case 0x07: pause_ = 0x40; return;                              // 18FB: 01:4F66 + a frame, $40 times
         case 0x0b: runEventCommand(0x0e, 0x37); return;                // 1711
         case 0x0c: runEventCommand(0x0d, 0x02); return;                // 1728
         case 0x10:                                                     // 16EB

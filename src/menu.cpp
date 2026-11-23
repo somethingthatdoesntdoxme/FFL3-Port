@@ -130,6 +130,14 @@ void FieldMenu::choose(uint8_t id, bool spell) {
         state_ = State::Done;                                                                            // 4DBF: out of the menu
         return;
     }
+    static const uint8_t keyItems[] = {0xe8, 0xe9, 0xe7, 0xf5};          // 09:4DC9
+    if (!spell && std::find(std::begin(keyItems), std::end(keyItems), id) != std::end(keyItems)) {
+        const uint16_t t = keyItem ? keyItem(id) : 0;                   // rst $18 $6D (0F:7CB0)
+        if (!t) { sfx(0x3b); say("Can't use that here.", "", back_); return; }   // 4DCE
+        keyText_ = t;
+        state_ = State::Done;                                           // 4DBF -> 09:408F: the text
+        return;
+    }
     if (spell && party_[size_t(member_)].mp() < m.mem[0xce29]) { sfx(0x3b); say("Not enough MP.", "", back_); return; }
     if (!kind || (kind & 0x80) || !(kind & 0x18)) { sfx(0x3b); say("Can't use that here.", "", back_); return; }
     if (kind & 0x10) { use(0x80); return; }
