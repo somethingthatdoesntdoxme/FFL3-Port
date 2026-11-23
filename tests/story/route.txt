@@ -724,3 +724,40 @@ face U
 a                                     # Maitreya
 check after_maitreya
 weaken off
+face U
+a                                     # the box Maitreya leaves: the X-Plane unit
+check x_plane
+
+== down the tower, out to the mountain foot: the Radio, the Remote
+go D8 L7 U7
+check down_67
+go D2 R2 U1 R1 U1 R9 D1
+check down_66
+go L3 D1
+jump
+go D1
+check down_65
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_64
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_63
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_62
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_61
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_60
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_5F
+go D3 L4 U1 L1 U2 L1 U6 R1 U1 R1 U1 R4 D3
+check down_5E
+go D11
+check down_5D
+go D3 R2 U7 R3 D8 L1 D2 L9 U9 L4 D3 L2 D10 R1 D1 R1 D5 R10 U2 R5 D6 R2 D6
+check mountain_foot
+keys S w40 A w30 D w10 D w10 D w10 A w30 A w30   # Item: the Radio (map 0, with $E3 and $E7: 0F:7CBB)
+                                      # Pulcer: "Now use the Remote to bring the Talon there." (no check
+                                      # here: the real game's mash sets flag 9 at the Talon's spot, 01:632A)
+keys S w40 A w30 D w10 D w10 A w30 A w30   # Item: the Remote (0F:7D42)
+a                                     # A where the Talon set down: "Let's go aground." - Viper, Belski
+check back_to_viper

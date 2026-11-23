@@ -304,6 +304,11 @@ bool Field::boardTalon() {
     const Actor& p = actors_[0];
     if (vehicle_ != 0 || p.moveFrames || map_ != saved_.map || p.row != saved_.row || p.col != saved_.col) return false;
     flags_.event.set(0x09);
+    if (!flags_.test(0x82)) return false;                        // 632F: the Talon isn't called yet
+    if (flags_.test(0x8f)) {                                      // 6335: after the Radio (Floatland):
+        if (openText) openText(0xa, 0x6a0a);                       // "Let's go aground." - back to Viper
+        return true;
+    }
     trans_ = kTransition;
     enterMap(0x10, 7, 16, Dir::Up);
     lastEvent_ = "boarded the Talon";
