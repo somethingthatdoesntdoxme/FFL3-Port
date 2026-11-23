@@ -595,3 +595,27 @@ go U3 L2 U2 L5                        # below Dion (51,24)
 face U
 a                                     # Dion joins; the Rocket
 check dion
+
+== to Dr. Pulcer (a Dive north of Viper)
+go D1 R2 D4 R5 D1
+check out_of_viper_base
+go D1 R1
+jump
+go R2 U1
+go D1
+go U1 R1 D1
+jump
+go D3
+check out_of_viper
+go R2 U4 R3                           # Viper's north-east shore
+face R
+keys S w40 D w10 A w30 A w30 D w10 A w30 A w30
+keys w120
+a                                     # down to the sea bed (map 08)
+check sea_bed_future
+go U3 L1 U8 L1
+check pulcer_base
+go U4 R1 U5 R2                        # below Dr. Pulcer (21,58)
+face U
+a                                     # Dr. Pulcer: the Radio
+check radio

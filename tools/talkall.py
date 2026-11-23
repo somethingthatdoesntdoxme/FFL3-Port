@@ -14,7 +14,8 @@ build = sys.argv[sys.argv.index('--build') + 1] if '--build' in sys.argv else os
 exe = os.path.join(build, 'ffl3'); grid = os.path.join(build, 'story', 'grid.txt')
 env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy', FFL3_TEXTLOG='1')
 base = open(route).read().rstrip('\n') + '\n'
-subprocess.run([exe, rom, '--story', route], env=env, capture_output=True, timeout=900)
+r0 = subprocess.run([exe, rom, '--story', route], env=env, capture_output=True, text=True, timeout=900)
+base_n = sum(1 for l in r0.stderr.split('\n') if l.startswith('TEXT '))   # texts before the walk
 objs = [tuple(map(int, l[4:].split(','))) for l in open(grid) if l.startswith('obj ')]
 T = Text(Rom(rom))
 for (r, c) in objs:
@@ -32,7 +33,7 @@ for (r, c) in objs:
     os.unlink(tmp)
     texts = [l.split()[1] for l in out.stderr.split('\n') if l.startswith('TEXT ')]
     said = ''
-    if texts and 'talkall' in out.stdout:
+    if len(texts) > base_n and 'talkall' in out.stdout:   # something new was said
         b, a = texts[-1].split(':'); ops, _ = T.parse(int(b, 16), int(a, 16)); said = T.render(ops).replace('\n', ' ')[:150]
     print(f'{r},{c} (from {" | ".join(best[0])}, face {best[1]}): {said or "-"}')
 subprocess.run([exe, rom, '--story', route], env=env, capture_output=True, timeout=900)   # leave the grid as it was
