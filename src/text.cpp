@@ -55,6 +55,7 @@ void TextBox::clear() {
 }
 
 void TextBox::open(int bank, uint16_t addr) {
+    if (std::getenv("FFL3_TEXTLOG")) std::fprintf(stderr, "TEXT %02X:%04X\n", bank, addr);   // debug: tools/ffl3text.py decodes it
     stack_.clear();
     Src s;
     s.bank = bank; s.addr = addr;
