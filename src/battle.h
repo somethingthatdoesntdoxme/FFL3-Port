@@ -77,6 +77,13 @@ public:
     const EnemyLayout& layout() const { return layout_; }
     const std::vector<Monster>& monsters() const { return groups_; }   // per group
     int enemyHp(int slot) const;
+    void weakenEnemies() {                     // test helper (story 'weaken on'): enemies on 1 HP
+        for (int s = 5; s < 8; s++) {
+            const uint16_t r = uint16_t(0xd000 + s * 0x80);
+            if (vm_.mem[uint16_t(r + 3)] == 0xff || word(uint16_t(r + 0x10)) <= 1) continue;
+            vm_.mem[uint16_t(r + 0x10)] = 1; vm_.mem[uint16_t(r + 0x11)] = 0;
+        }
+    }
     int memberSprite(int m) const;
     std::vector<std::string> log;            // every message line, ASCII (tests)
     std::vector<uint16_t> unknownNatives;    // natives not handled yet (logged, skipped)

@@ -709,6 +709,18 @@ check tower_66_again
 go U1                                 # the step again (the monster's gone)
 check past_monster
 go U2 R3                              # the hidden door Dion found (16,34)
-check hidden_door
-go D2 R1 D1 R1 D1 R1 D7 L1 D1 L5 U4
-check tower_68
+check hidden_door                     # "Hmm? This wall.s a bit…… Hidden door!" (event 1E: the patches again)
+go U1
+check maitreya_room
+go L9 D1 L1 D1 L2 U3
+check maitreya_hall
+go D6 R7 U6                           # up the middle towards Maitreya
+check before_maitreya
+heal
+boost 99                              # test helper: Maitreya and two Lamias
+weaken on                             # test helper: and on 1 HP (the mash never gets them down)
+go U2
+face U
+a                                     # Maitreya
+check after_maitreya
+weaken off

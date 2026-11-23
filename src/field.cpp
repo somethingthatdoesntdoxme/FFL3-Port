@@ -796,6 +796,14 @@ void Field::runEventCommand(int cmd, int param) {
     case 0x23: if (talonConsole) talonConsole(); return;               // 19b8 -> 01:7972
     case 0x2a: if (openText) openText(0xa, 0x7a7d); return;            // 1bd7: rst $A0 0A:7A7D
     case 0x1f: applyMapPatches(); return;                              // 137c -> 0B:78F5
+    case 0x1e:                                                         // 12DC: the patches again (a hidden
+        applyMapPatches();                                             // door opened...), an effect, a redraw
+        if (param == 0x02 || (param >= 0x19 && param <= 0x1d) || param == 0x24) {   // 01:614F.. screen effects
+            std::snprintf(buf, sizeof buf, "event 1E effect %02X (not implemented)", param);
+            lastEvent_ = buf;
+            if (onUnknownEvent) onUnknownEvent(buf);
+        }
+        return;
     case 0x22:                                                         // 1a84: rest (fade, heal)
         if (playSfx) playSfx(0x17);
         if (healParty) healParty();

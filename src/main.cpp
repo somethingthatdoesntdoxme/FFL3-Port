@@ -993,6 +993,7 @@ int main(int argc, char** argv) {
     std::string promptLine;
     std::string noteDir;                                // set: the prompt is a bug note for that report
     std::string lastLogged;
+    bool storyWeaken = false;                                 // story 'weaken on'
     auto runCommand = [&](const std::string& line) {
         char cmd[32] = {};
         unsigned a = 0, b = 0, c = 0;
@@ -1012,6 +1013,10 @@ int main(int argc, char** argv) {
         if (k == "battles") {                                   // battles on / off (random encounters, like F3)
             field.encounters = line.find("off") == std::string::npos;
             return std::string(field.encounters ? "random battles on" : "random battles off");
+        }
+        if (k == "weaken") {                                    // test helper: weaken on / off - every enemy on
+            storyWeaken = line.find("off") == std::string::npos;   // 1 HP (fights whose RNG we can't steer)
+            return std::string(storyWeaken ? "enemies on 1 HP" : "enemies as they are");
         }
         if (k == "boost") {                                     // test helper (story runs): a party that can win the
             int n = 0;                                          // story's fixed fights without grinding battles
@@ -1675,6 +1680,7 @@ int main(int argc, char** argv) {
                 in.up = up && !upPrev; in.down = down && !downPrev;
                 in.left = left && !leftPrev; in.right = right && !rightPrev;
                 battle->tick(in);
+                if (storyWeaken) battle->weakenEnemies();
                 if (battle->finished()) { finishBattle(); if (resetAfterBattle) { runCommand("normal"); resetAfterBattle = false; } }
                 if (gameOver) { gameOver = false; title = std::make_unique<TitleScreen>(rom); opening = 1; }
             } else if (console) {

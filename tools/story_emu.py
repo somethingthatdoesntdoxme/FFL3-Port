@@ -55,6 +55,7 @@ def _no_wander(_):                                        # 01:5092: just after 
 pb.hook_register(1, 0x5092, _no_wander, None)
 WATCH = {int(x, 16): -1 for x in os.environ.get('STORY_WATCH', '').split(',') if x}
 
+weaken = [False]
 def tick(keys=()):
     """One frame with these buttons held; tracks how many frames in a row we've been free."""
     global frame, free_run
@@ -65,6 +66,9 @@ def tick(keys=()):
     st['loop'] = False
     if no_battles[0]: mem[0xca2b] = 0                    # 01:4617: rate 0 = no random battles
     pb.tick(1, bool(a.shots))
+    if weaken[0]:                                         # enemy records wD280/D300/D380: HP +$10 down to 1
+        for r in (0xd280, 0xd300, 0xd380):
+            if mem[r + 3] != 0xff and (mem[r + 0x10] | mem[r + 0x11] << 8) > 1: mem[r + 0x10] = 1; mem[r + 0x11] = 0
     frame += 1
     s = state()
     if WATCH:                                             # debug: STORY_WATCH=c206,c769 logs changes
@@ -197,7 +201,7 @@ for ln, line in enumerate(steps, 1):
     elif op == 'a':                                       # press A (talk / examine), then until free
         if not mash_until_free(20000): fail(f'line {ln} stuck before A')
         tick(('a',)); tick(('a',)); tick(); tick()
-        if not mash_until_free(20000): fail(f'line {ln} stuck after A')
+        if not mash_until_free(80000): fail(f'line {ln} stuck after A')
     elif op == 'shop':                                    # talk to a seller: through the speech, then out (B)
         if not mash_until_free(20000): fail(f'line {ln} stuck before shop')
         st['shop'] = -1
@@ -235,6 +239,8 @@ for ln, line in enumerate(steps, 1):
             for o in (0x10, 0x14): mem[b + o] = mem[b + o + 2]; mem[b + o + 1] = mem[b + o + 3]
     elif op == 'npcs':                                    # npcs still / wander
         npcs_still[0] = len(w) > 1 and w[1] == 'still'
+    elif op == 'weaken':                                  # test helper: weaken on / off - enemies on 1 HP
+        weaken[0] = not (len(w) > 1 and w[1] == 'off')
     elif op == 'battles':                                 # random encounters on / off
         no_battles[0] = len(w) > 1 and w[1] == 'off'
     elif op == 'wait':

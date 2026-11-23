@@ -187,6 +187,8 @@ AnimTask StoryPlayer::run() {
             if (onCommand) onCommand("heal");
         } else if (op == "npcs") {                                      // npcs still / wander
             if (onCommand) onCommand("npcs " + (s.w.size() > 1 ? s.w[1] : std::string("wander")));
+        } else if (op == "weaken") {                                    // test helper: weaken on / off -
+            if (onCommand) onCommand("weaken " + (s.w.size() > 1 ? s.w[1] : std::string("on")));   // enemies on 1 HP
         } else if (op == "battles") {                                   // random encounters on / off
             if (onCommand) onCommand("battles " + (s.w.size() > 1 ? s.w[1] : std::string("on")));
         } else if (op == "wait") {
