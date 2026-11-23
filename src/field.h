@@ -149,6 +149,7 @@ private:
     int flash_ = 0;
     unsigned liftUses_ = 0;            // wCA58
     int liftStep_ = -1;                // the lift's step, waiting for the flashes
+    bool pureland_ = false;            // the warp to Pureland lands the Talon (01:647B)
     int pause_ = 0;                    // event 12 07 (00:18FB): $40 frames of the objects' own moves
     int stepVehicle_ = -1;             // a forced step, then this vehicle: Dive (01:40E1), off the bubble (4272)
     // Events $12 $08/$09 (00:190D / 1950): the leader spins for 160 frames, facing from

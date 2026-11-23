@@ -418,7 +418,16 @@ int main(int argc, char** argv) {
     };
     auto consoleDone = [&] {
         if (console->result() == 1) { text.close(); field.takeOff(console->takeOffMode()); }
-        if (console->result() == 2) { text.close(); field.timeWarp(console->warpEra()); }
+        if (console->result() == 2) {
+            text.close();
+            if (console->warpEra() == 8) {                        // 0F:7A1B (rst $18 $9A): the X-Plane and
+                battleRam[0xc6f8] &= uint8_t(~0x01);              // Past units are spent ("inoperable from
+                battleRam[0xc6f9] &= uint8_t(~0x10);              // Warp usage"), then rst $18 $18
+                for (int i = 0; i < 24; i++)
+                    if (battleRam[size_t(0xc700 + i * 2)] == 0) battleRam[size_t(0xc6ff + i * 2)] = battleRam[size_t(0xc700 + i * 2)] = 0xff;
+            }
+            field.timeWarp(console->warpEra());
+        }
         console.reset();
     };
     auto openMenu = [&] {

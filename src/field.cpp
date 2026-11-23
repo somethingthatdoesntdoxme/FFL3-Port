@@ -248,7 +248,11 @@ void Field::timeWarp(int era) {
     if (era == 1) { flags_.event.set(0x0e); flags_.event.set(0x0f, flags_.test(0x56)); }
     else if (era == 2) { flags_.event.reset(0x0e); flags_.event.reset(0x0f); }
     else if (era == 4) { flags_.event.reset(0x0e); flags_.event.set(0x0f); }
-    // era 8 (Pureland): not seen yet
+    else if (era == 8) {                                          // 647B: Pureland - flags 5 and $8D,
+        flags_.event.set(0x05); flags_.event.set(0x8d);           // $39 and $3D off; after the warp
+        flags_.event.reset(0x39); flags_.event.reset(0x3d);       // (rst $18 $5A) the Talon is set down
+        pureland_ = true;                                         // there (see the tick)
+    }
     warp_ = kWarpFrames;
     lastEvent_ = "time warp";
 }
@@ -436,7 +440,12 @@ void Field::wanderStep() {
 
 void Field::tick(int dir) {
     clock_++;
-    if (warp_) warp_--;
+    if (warp_ && !--warp_ && pureland_) {                          // 6495: vehicle 3, event 0E 2F (map 1),
+        pureland_ = false;                                        // then 0A:6D37 "Status Report..."
+        runEventCommand(0x0e, 0x2f);
+        setVehicle(3);
+        if (openText) openText(0xa, 0x6d37);
+    }
     if (trans_) { trans_--; return; }                    // fading: nothing moves
     if (floatDrop_ && --floatDrop_ == 0) {                // 4053: then vehicle 1, the party floats
         setVehicle(1);
@@ -700,6 +709,12 @@ void Field::runEventCommand(int cmd, int param) {
             if (saved_.map >= 0) enterMap(saved_.map, saved_.row, saved_.col, p.facing);
             return;
         case 0xd: saved_ = {map_, p.row, p.col}; return;               // 15E6
+        case 0xc:                                                      // 14EB -> 01:4250: the Talon sets down
+            saved_ = {map_, p.row, p.col};                             // here (the spot), on to the bridge
+            setVehicle(0);
+            trans_ = kTransition;
+            enterMap(0x10, 5, 16, Dir::Up);                            // 636D
+            return;
         case 0xa: {                                                    // 152C -> 01:664B: a preset return stack
             // 01:66C1[p-1] -> depth*2, then per entry (top first) masks, row, col (blocks of
             // scroll, so +5 for the leader), map. Also copied to wC7C9-CB: the bottom entry (01:41EC).

@@ -756,8 +756,34 @@ check down_5D
 go D3 R2 U7 R3 D8 L1 D2 L9 U9 L4 D3 L2 D10 R1 D1 R1 D5 R10 U2 R5 D6 R2 D6
 check mountain_foot
 keys S w40 A w30 D w10 D w10 D w10 A w30 A w30   # Item: the Radio (map 0, with $E3 and $E7: 0F:7CBB)
+a                                     # A at the Talon's spot - flag 9 (01:632A), nothing more yet
                                       # Pulcer: "Now use the Remote to bring the Talon there." (no check
                                       # here: the real game's mash sets flag 9 at the Talon's spot, 01:632A)
 keys S w40 A w30 D w10 D w10 A w30 A w30   # Item: the Remote (0F:7D42)
+settle
 a                                     # A where the Talon set down: "Let's go aground." - Viper, Belski
 check back_to_viper
+
+== back aboard the Talon: the X-Plane unit, to Pureland
+go D1
+check out_of_viper_base2
+go D1 R1
+jump
+go R2 U1
+go D1
+go U1 R1 D1
+jump
+go D3
+check out_of_viper2
+go D1 L1                              # where the Talon set down (32,52)
+a                                     # aboard (01:634A)
+check aboard_viper
+go U1
+keys U20 w90                          # the seat: "Attached X-Plane to Talon."
+peek attach_xplane
+keys A w60 D w60 D w60 A w60          # past the message, down to Warp, in
+peek warp_menu_pureland
+keys D w60 D w60 A w90                # X-Plane
+peek to_pureland
+keys A w400                           # yes: the warp
+check in_pureland
