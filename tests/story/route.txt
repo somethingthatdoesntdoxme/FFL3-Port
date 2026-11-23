@@ -678,3 +678,37 @@ go U2
 ride U 2,9
 go L2 U1
 check out_of_ruins
+
+== Floatland mountain and its tower: Maitreya
+go L2 U2 R6 D4 R1 D1 R2 D1 R1 D2 R1 D3 R6 D1 R2 D1 R4 U5 L1 U4 L2 U1 L5 U1 L1
+check mountain
+go U2 L3 U6 L2 U3 L5 D2 L4 U1 L4 U1 L2 U7 L2 U10 R5 D9 R10 U7 R1 U3 L2 D7 L3 U4
+check tower_1
+go U11
+check tower_2
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_60
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_61
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_62
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_63
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_64
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_65
+go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_66
+heal
+boost 99                              # test helper: the fights ahead
+go U1                                 # the step at 18,31
+check tower_top_step
+go U1 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+check tower_66_again
+go U1                                 # the step again (the monster's gone)
+check past_monster
+go U2 R3                              # the hidden door Dion found (16,34)
+check hidden_door
+go D2 R1 D1 R1 D1 R1 D7 L1 D1 L5 U4
+check tower_68

@@ -93,7 +93,7 @@ try:
 except Exception:
     def animated(mp): return False
 bad = 0
-rng_members = None
+rng_members = False
 # Checkpoints whose screen is known to differ: '# known: ...' on the check line (a note, not a failure).
 known = {}
 for line in open(a.route):
@@ -116,9 +116,10 @@ for i, pc in enumerate(port):
     if pc['map'] != ec['map'] or pc['pos'] != ec['pos']: probs.append('place')
     if pc['flags'] != ec['flags']: probs.append('flags port vs game: ' + flagdiff(pc['flags'], ec['flags']))
     if pc['bag'] != ec['bag']: probs.append(f'bag port {pc["bag"]} vs game {ec["bag"]}')
+    if pc['members'] == ec['members']: rng_members = False
     if pc['members'] != ec['members']:                     # after battles that went differently (max HP
-        rng = pc['maxhp'] != ec['maxhp'] or (pc['members'], ec['members']) == rng_members   # differs too, or the
-        if rng: rng_members = (pc['members'], ec['members'])   # same difference since): a meat eaten etc. - a note
+        rng = pc['maxhp'] != ec['maxhp'] or rng_members   # differs too, or since a difference put down to the
+        if rng: rng_members = True                         # battles, till they agree again): a meat, levels - a note
         (notes if rng else probs).append(f'members port {pc["members"]} vs game {ec["members"]}')
     if pc['maxhp'] != ec['maxhp']: notes.append('(party ' + ' '.join(pc['party']) + ' vs ' + ' '.join(ec['party']) + ': random battles differ)')
     sd = shotdiff(pc['label']) if pc['kind'] != 'STEP' else None
