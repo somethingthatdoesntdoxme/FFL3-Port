@@ -475,3 +475,22 @@ Translated in src/battleanim.cpp (C++20 coroutines; 00:3A6D "wait a frames" = co
   Talon console attach (01:7C37). The port only does the 66BB half so far - the slot 0 drop
   only matters for a race-0 member (not hit on the story route yet).
 - Found by the story compare's new `members` field (who + the 16 item bytes of each record).
+
+### Dive, the sea bed, moving floors (story run, Chaos Castle)
+
+- Dive ($20, 01:40DD): on foot on a world map ($02-$05) with water in front (attr & $E4 = $40);
+  sfx $27, a forced step onto the water, vehicle 2 (01:4182).
+- A on the bubble (00:0949): world map <-> sea bed by 00:0935/093D ($02/$03 -> $06, $04 -> $07,
+  $05 -> $08; $06 -> $02, or $03 once flag $0E is set), the same place. B (01:4272): a step
+  ashore if the block in front is land (0-2 or $88-$8B, flag 4 as for the float); nothing on
+  the sea bed.
+- The real game can miss a 2-frame A tap on the sea after Chaos Castle (its loop doesn't sample
+  every frame there); the port takes it. The route holds A for 3 frames there.
+- Moving floors ($8x, 01:4BF6) in Chaos Castle carry you their way to their end; stepping
+  against one doesn't get you on it, but a sideways step off it works (the route's tap-down-
+  then-right at 44,15).
+- Event $13 (00:15D3) takes an item off the bag: the South Tower key at its door, the Chaos Key
+  at Chaos Castle's.
+- Era flags at the warp home (01:6460): $0E on, $0F = flag $56 (set when Dogra is beaten); $0E
+  and $0F both on is the Present after Dogra, where the Talon shrine's step text plays the
+  Elder scene (needs flag $11 too: Lara joined).

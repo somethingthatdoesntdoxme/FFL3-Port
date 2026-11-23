@@ -32,11 +32,12 @@ else:
     sr, sc = map(int, sys.argv[3].split(','))
 goal = sys.argv[4:]
 objs = set()
-mask, flags0 = 0xff, 0x47
+mask, flags0, veh = 0xff, 0x47, 0
 if '--grid' in sys.argv:
     lines = open(sys.argv[sys.argv.index('--grid') + 1]).read().split('\n')
     hw = lines[0].split()
     if 'mask' in hw: mask = int(hw[hw.index('mask') + 1], 16); flags0 = int(hw[hw.index('flags') + 1], 16)
+    if 'vehicle' in hw: veh = int(hw[hw.index('vehicle') + 1])
     A = []; Bk = []
     for l in lines[1:]:
         if l.startswith('obj '): objs.add(tuple(map(int, l[4:].split(','))))
@@ -76,6 +77,7 @@ def layer(f, a):                                # 01:4EE1
 
 def step(f, a):
     """(can walk onto a block with attr a, leader flags after) - 00:1024 + 01:4E48."""
+    if veh == 2 and m < 6: return (a & 0x40) != 0, f    # 00:1058: the Dive bubble (and the Talon) at sea
     if a == 0xeb: return False, f
     if (a & 0xc0) in (0xc0, 0x80): return True, 0x47
     g = layer(f, a)

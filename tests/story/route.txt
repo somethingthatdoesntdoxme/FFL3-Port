@@ -461,3 +461,54 @@ boost 99                              # test helper: Chaos stones the party - st
 face U
 a                                     # Chaos (39,44)
 check after_chaos
+go U1 L2 D2
+face L
+a                                     # the west box: the Future Unit
+check future_unit
+
+== out of Chaos Castle with the Future Unit
+go U2 R2 D4
+go D19
+go D2 R4 U2 R1 U9 R3 D2
+check chaos_out_49
+go D5 R2 D15 L6 U3
+check chaos_out_4a
+go U1 L5 U5 L1 U2 L2 U2 L1 U9 L5 D2
+check chaos_out_49b
+go D2 R2 U2 R3 D13 R3 U3
+go D8
+check chaos_out_48
+go D8 R6 D1
+go D1 L3
+check chaos_out_47
+go L10 U6
+go D7 R2 D1 R1 D1
+check out_of_chaos_castle
+
+== up to the surface and back to the Talon
+keys A w60                            # A on the bubble: up to the sea (map 03) - a 2-frame tap can be missed here
+check surfaced
+go U1 R1 U9 R7                        # by the shrine's shore (36,27)
+face R
+keys B w60                            # B: a step ashore (01:4272)
+check ashore
+go R3 U4 L1
+go U1
+check shrine_future
+go U11
+go D22                                # down the deck to the bridge
+check bridge_future
+go U1
+keys U20 w90                          # the seat: "Attached Future to Talon."
+peek attach_future
+keys A w60 D w60 D w60 A w60          # past the message, down to Warp, in
+peek warp_menu_future
+keys D w60 A w90                      # Future
+peek to_future
+keys A w400                           # yes: the warp
+check in_the_future                   # flag 0E off, 0F on: the Future (01:644D)
+go D3                                 # back to the deck
+go U22                                # up the deck, out through the swirl
+check temple_top_future
+go D12                                # down the stairs and out
+check future_overworld
