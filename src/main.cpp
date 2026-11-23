@@ -1417,6 +1417,7 @@ int main(int argc, char** argv) {
         v.free = v.loop && p.moveFrames == 0;
         v.shop = bool(shop);
         v.stepping = p.moveFrames > 0;
+        v.under = field.attrAt(p.row, p.col);
         v.map = field.mapId(); v.row = p.row; v.col = p.col;
         char b[8];
         for (const auto* bits : {&flags.event, &flags.chest})     // wC760 and wC780, 32 bytes each

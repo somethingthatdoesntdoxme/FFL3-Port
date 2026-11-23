@@ -117,6 +117,28 @@ def jump(y, x, f, d):
     if jcheck(y + 2 * dy, x + 2 * dx, f, True): return ((y + 2 * dy) % H, (x + 2 * dx) % W)
     if jcheck(y + dy, x + dx, f, True): return ((y + dy) % H, (x + dx) % W)
     return None
+def conv(a): return (a & 0xc0) == 0x80 and a & 0x3c     # a moving floor (01:4BF6)
+def ride(y, x, d):
+    """Hold d from (y, x) over moving floors (01:4C3A..): on one, d sideways is a step if there's
+    room, else (and with / against it) it carries you its way; off them it ends. (row, col, facing)
+    of the still block where it stops, or None (not onto a moving floor, or stuck on one)."""
+    vec = {'U': (-1, 0), 'R': (0, 1), 'D': (1, 0), 'L': (0, -1)}
+    if not conv(A[y][x]):
+        ny, nx = (y + vec[d][0]) % H, (x + vec[d][1]) % W
+        if not conv(A[ny][nx]) or (ny, nx) in objs or not step(0x47, A[ny][nx])[0]: return None
+        y, x, last = ny, nx, d
+    else: last = d
+    for _ in range(128):
+        if not conv(A[y][x]): return (y, x, last)
+        c = 'URDL'[A[y][x] & 3]
+        if d not in (c, {'U': 'D', 'D': 'U', 'L': 'R', 'R': 'L'}[c]):
+            ny, nx = (y + vec[d][0]) % H, (x + vec[d][1]) % W
+            if step(0x47, A[ny][nx])[0] and (ny, nx) not in objs: y, x, last = ny, nx, d; continue
+        ny, nx = (y + vec[c][0]) % H, (x + vec[c][1]) % W
+        if not step(0x47, A[ny][nx])[0] or (ny, nx) in objs: return None
+        y, x, last = ny, nx, c
+    return None
+
 cur = [0, 0]
 start = (sr, sc, flags0, '')
 import heapq
@@ -155,6 +177,9 @@ while q:
             push((cy, cx, 0x47, cf), cur_st, d + '|', c0 + 1)   # facing the way it carried you
             continue
         push((ny, nx, g, d), cur_st, d, c0 + (6 if A[ny][nx] in (0xe0,) else 1))   # $20 hurts: avoid it
+    for d, dy, dx in D:                                   # `ride d`: hold d over moving floors
+        r = ride(y, x, d)
+        if r: push((r[0], r[1], 0x47, r[2]), cur_st, 'R' + d, c0 + 2)
     if face:                                              # B: jump the way we face (01:47B2); costs more
         j = jump(y, x, f, face)
         if j and (A[j[0]][j[1]] & 0xc0) == 0x80 and A[j[0]][j[1]] & 0x3c: j = None   # not onto a moving floor
@@ -191,13 +216,15 @@ for d in path:
         else: toks.append([d[0], 1])
         toks.append(['|', 0]); continue
     if d == 'J': toks.append(['J', 0]); continue          # a jump
+    if d[0] == 'R' and len(d) == 2: toks.append(['R' + d[1], 0]); continue   # a ride
     if toks and toks[-1][0] == d: toks[-1][1] += 1
     else: toks.append([d, 1])
 out = []
 for d, n in toks:
     if d == '|': out.append('|')
     elif d == 'J': out.append('#J')
-    elif out and out[-1] not in ('|', '#J'): out[-1] += f' {d}{n}'
+    elif d[0] == 'R' and len(d) == 2: out.append('ride ' + d[1])
+    elif out and out[-1] not in ('|', '#J') and not out[-1].startswith('ride'): out[-1] += f' {d}{n}'
     else: out.append(f'go {d}{n}')
 lines = [('jump' if o == '#J' else o) for o in out if o != '|']
 print('\n'.join(lines) + f'   # -> {end[0]},{end[1]} attr {A[end[0]][end[1]]:02X}')

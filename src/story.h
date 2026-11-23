@@ -22,6 +22,7 @@ struct StoryView {
     bool free = false;          // ... and the leader stands on the grid: it would take a step now
     bool shop = false;          // a shop is open (01:6FD4)
     bool stepping = false;      // the leader is mid-step (wC6EF != 0)
+    uint8_t under = 0;          // the attr under the leader (wC2F0)
     int map = 0, row = 0, col = 0;
     std::string flags;          // wC760-C77F as hex
     std::string party;          // "hp/max ..." for members 1-4

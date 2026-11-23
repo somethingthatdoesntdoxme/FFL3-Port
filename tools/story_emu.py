@@ -184,6 +184,15 @@ for ln, line in enumerate(steps, 1):
                 guard += 1
                 if guard > 400: fail(f'line {ln} wandering in {tok}')
                 tick()
+    elif op == 'ride':                                    # ride D: hold it over moving floors (sideways off
+        d = DIRS[w[1][0]]                                 # them, against them) until a still block
+        if not mash_until_free(20000): fail(f'line {ln} stuck before ride')
+        s0 = state(); f = 0
+        while True:
+            s = tick((d,)); f += 1
+            moved = (s['map'], s['row'], s['col']) != (s0['map'], s0['row'], s0['col'])
+            if moved and mem[0xc6ef] == 0 and (mem[0xc2f0] & 0xc0) != 0x80: break   # wC2F0: attr under the leader
+            if f > 1200: fail(f'line {ln} riding too long')
     elif op == 'a':                                       # press A (talk / examine), then until free
         if not mash_until_free(20000): fail(f'line {ln} stuck before A')
         tick(('a',)); tick(('a',)); tick(); tick()
@@ -250,7 +259,7 @@ for ln, line in enumerate(steps, 1):
         emit('CHECK', f'{section}_{ln}')
     else:
         fail(f'line {ln} unknown step {op}')
-    if os.environ.get('FFL3_STORYDENSE') and op in ('go', 'face', 'a', 'shop', 'jump', 'settle'):
+    if os.environ.get('FFL3_STORYDENSE') and op in ('go', 'ride', 'face', 'a', 'shop', 'jump', 'settle'):
         pending_step[0] = f'L{ln}'                        # dense runs: emitted when a later step finds it free (no frames added)
 emit('DONE', 'end')
 if os.environ.get('STORY_STATE'):                         # debug: keep where the route ended

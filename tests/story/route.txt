@@ -633,3 +633,28 @@ check pier
 keys S w40 A w30 D w10 D w10 A w30 A w30   # Item: the Rocket (with the Radio, on the pier: 0F:7D0E)
 peek rocket
 check launched                        # "Now!!" - up to Floatland
+
+== Floatland: the ruins (the Remote)
+go U4 R4 U6 L1 U1 L3 U1 L1 U3 R2
+check ruins_1f
+go D1
+go U1
+go D1 R2 D1
+go D1 L1
+go D1 R2 U3
+go R2
+go U2
+go L1
+check ruins_5c
+go D1 L2
+go D1 R2                              # the hole at 32,32 -> 13,32
+check r5c_13_32
+go U1                                 # 12,32 -> 31,32
+go R3
+ride U                                # the moving floors: up, then off them left
+go U1
+ride L
+go L1
+go D1 L8 U2
+go R1 D5 L1 D5 R2 U2                  # the hole at 32,26 -> map 5B 13,40
+check ruins_down

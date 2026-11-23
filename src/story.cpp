@@ -138,6 +138,17 @@ AnimTask StoryPlayer::run() {
                     co_await tick();
                 }
             }
+        } else if (op == "ride") {                                      // ride D: hold it over moving floors
+            const uint8_t d = dirKey(s.w[1][0]);                         // (sideways off them, against them)
+            co_await mashUntilFree(20000, false, &ok);                   // until a still block, settled
+            if (!ok) { fail(at + " stuck before ride"); co_return; }
+            const StoryView s0 = v_;
+            for (int f = 0;; f++) {
+                co_await tick(d);
+                const bool moved = v_.map != s0.map || v_.row != s0.row || v_.col != s0.col;
+                if (moved && !v_.stepping && (v_.under & 0xc0) != 0x80) break;
+                if (f > 1200) { fail(at + " riding too long"); co_return; }
+            }
         } else if (op == "a") {
             co_await mashUntilFree(20000, false, &ok);
             if (!ok) { fail(at + " stuck before A"); co_return; }
@@ -218,7 +229,7 @@ AnimTask StoryPlayer::run() {
         // input, so the run plays exactly as without it.
         static const bool dense = std::getenv("FFL3_STORYDENSE") != nullptr;
         // (emitted the next time a step finds the game free - no frames added, so the run plays the same)
-        if (dense && (op == "go" || op == "face" || op == "a" || op == "shop" || op == "jump" || op == "settle"))
+        if (dense && (op == "go" || op == "ride" || op == "face" || op == "a" || op == "shop" || op == "jump" || op == "settle"))
             pendingStep_ = "L" + std::to_string(s.line);
     }
     emit("DONE", "end");
