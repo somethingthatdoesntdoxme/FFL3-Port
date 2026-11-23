@@ -512,3 +512,27 @@ go U22                                # up the deck, out through the swirl
 check temple_top_future
 go D12                                # down the stairs and out
 check future_overworld
+
+== the Future: Elan, Granny's Morph
+heal                                  # test helper: the battles went differently (MP for Float)
+keys S w40 D w10 A w30 A w30 A w30
+keys A w120
+check afloat_future
+go L5 U2 L13                    # west to below Elan's gate
+settle
+keys B w30
+go U1
+check elan_future                     # map 2C
+go D9 R2 D2 R1 D2 R1 D3 R4 U1
+check inn_future
+go U7 L5 U1 L2 U2
+check inn_30
+go U1                                 # to the counter
+keys w30 A w90                        # the innkeeper: "Howdy! 0G/night."
+peek inn_future
+keys A w400 A w60                     # Stay: the night, "Thank you!"
+check rested_future
+go D1 L4 U4                           # below the bed (7,8)
+face U
+a                                     # Granny in bed: Morph
+check morph
