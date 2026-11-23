@@ -16,6 +16,11 @@ env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy', FFL3_TE
 base = open(route).read().rstrip('\n') + '\n'
 r0 = subprocess.run([exe, rom, '--story', route], env=env, capture_output=True, text=True, timeout=900)
 base_n = sum(1 for l in r0.stderr.split('\n') if l.startswith('TEXT '))   # texts before the walk
+import re
+def bagof(out):
+    m = re.findall(r' bag (\S+)', out)
+    return set(m[-1].split(':', 1)[1].strip(',').split(',')) if m else set()
+bag0 = bagof(r0.stdout)
 objs = [tuple(map(int, l[4:].split(','))) for l in open(grid) if l.startswith('obj ')]
 T = Text(Rom(rom))
 for (r, c) in objs:
@@ -35,5 +40,6 @@ for (r, c) in objs:
     said = ''
     if len(texts) > base_n and 'talkall' in out.stdout:   # something new was said
         b, a = texts[-1].split(':'); ops, _ = T.parse(int(b, 16), int(a, 16)); said = T.render(ops).replace('\n', ' ')[:150]
-    print(f'{r},{c} (from {" | ".join(best[0])}, face {best[1]}): {said or "-"}')
+    got = bagof(out.stdout) - bag0 if 'talkall' in out.stdout else set()
+    print(f'{r},{c} (from {" | ".join(best[0])}, face {best[1]}): {said or "-"}' + (f'  [bag +{",".join(sorted(got))}]' if got else ''))
 subprocess.run([exe, rom, '--story', route], env=env, capture_output=True, timeout=900)   # leave the grid as it was

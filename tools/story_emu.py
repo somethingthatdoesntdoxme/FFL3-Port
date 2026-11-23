@@ -184,15 +184,16 @@ for ln, line in enumerate(steps, 1):
                 guard += 1
                 if guard > 400: fail(f'line {ln} wandering in {tok}')
                 tick()
-    elif op == 'ride':                                    # ride D: hold it over moving floors (sideways off
-        d = DIRS[w[1][0]]                                 # them, against them) until a still block
+    elif op == 'ride':                                    # ride D R,C: hold D over moving floors (sideways
+        d = DIRS[w[1][0]]                                 # off them, else carried) until at R,C - a still
+        tr, tc = map(int, w[2].split(','))                # block - then let go and settle
         if not mash_until_free(20000): fail(f'line {ln} stuck before ride')
-        s0 = state(); f = 0
+        f = 0
         while True:
             s = tick((d,)); f += 1
-            moved = (s['map'], s['row'], s['col']) != (s0['map'], s0['row'], s0['col'])
-            if moved and mem[0xc6ef] == 0 and (mem[0xc2f0] & 0xc0) != 0x80: break   # wC2F0: attr under the leader
+            if (s['row'], s['col']) == (tr, tc): break
             if f > 1200: fail(f'line {ln} riding too long')
+        if not mash_until_free(20000): fail(f'line {ln} stuck after ride')
     elif op == 'a':                                       # press A (talk / examine), then until free
         if not mash_until_free(20000): fail(f'line {ln} stuck before A')
         tick(('a',)); tick(('a',)); tick(); tick()

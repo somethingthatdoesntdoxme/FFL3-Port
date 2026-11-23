@@ -138,17 +138,19 @@ AnimTask StoryPlayer::run() {
                     co_await tick();
                 }
             }
-        } else if (op == "ride") {                                      // ride D: hold it over moving floors
-            const uint8_t d = dirKey(s.w[1][0]);                         // (sideways off them, against them)
-            co_await mashUntilFree(20000, false, &ok);                   // until a still block, settled
+        } else if (op == "ride") {                                      // ride D R,C: hold D over moving floors
+            const uint8_t d = dirKey(s.w[1][0]);                         // (sideways off them, else carried)
+            int tr = 0, tc = 0;                                          // until at R,C (a still block), then
+            if (s.w.size() < 3 || std::sscanf(s.w[2].c_str(), "%d,%d", &tr, &tc) != 2) { fail(at + " ride needs R,C"); co_return; }
+            co_await mashUntilFree(20000, false, &ok);                   // let go and settle
             if (!ok) { fail(at + " stuck before ride"); co_return; }
-            const StoryView s0 = v_;
             for (int f = 0;; f++) {
                 co_await tick(d);
-                const bool moved = v_.map != s0.map || v_.row != s0.row || v_.col != s0.col;
-                if (moved && !v_.stepping && (v_.under & 0xc0) != 0x80) break;
+                if (v_.row == tr && v_.col == tc) break;
                 if (f > 1200) { fail(at + " riding too long"); co_return; }
             }
+            co_await mashUntilFree(20000, false, &ok);
+            if (!ok) { fail(at + " stuck after ride"); co_return; }
         } else if (op == "a") {
             co_await mashUntilFree(20000, false, &ok);
             if (!ok) { fail(at + " stuck before A"); co_return; }

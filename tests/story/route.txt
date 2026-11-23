@@ -646,15 +646,35 @@ go R2
 go U2
 go L1
 check ruins_5c
-go D1 L2
-go D1 R2                              # the hole at 32,32 -> 13,32
-check r5c_13_32
-go U1                                 # 12,32 -> 31,32
-go R3
-ride U                                # the moving floors: up, then off them left
-go U1
-ride L
+go D1 L1
+ride L 24,32
 go L1
 go D1 L8 U2
-go R1 D5 L1 D5 R2 U2                  # the hole at 32,26 -> map 5B 13,40
-check ruins_down
+go R1 D5 L18 U3 L3
+face U
+a                                     # the box: the Remote
+check remote
+
+== out of the ruins
+go D3 R14 U4 R6
+go D1 R8 U2
+go R1 D1
+ride R 24,35
+go R1 U2
+check ruins_up
+go D2
+go R1
+ride R 5,54
+go R1 D1
+go D1
+ride D 10,55
+go D1
+ride D 13,55
+go D2
+go D2 L3 U2
+go L1 D2 L1
+go L3
+go U2
+ride U 2,9
+go L2 U1
+check out_of_ruins

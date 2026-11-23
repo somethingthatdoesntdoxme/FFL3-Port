@@ -179,7 +179,7 @@ while q:
         push((ny, nx, g, d), cur_st, d, c0 + (6 if A[ny][nx] in (0xe0,) else 1))   # $20 hurts: avoid it
     for d, dy, dx in D:                                   # `ride d`: hold d over moving floors
         r = ride(y, x, d)
-        if r: push((r[0], r[1], 0x47, r[2]), cur_st, 'R' + d, c0 + 2)
+        if r: push((r[0], r[1], 0x47, r[2]), cur_st, f'R{d}{r[0]},{r[1]}', c0 + 2)
     if face:                                              # B: jump the way we face (01:47B2); costs more
         j = jump(y, x, f, face)
         if j and (A[j[0]][j[1]] & 0xc0) == 0x80 and A[j[0]][j[1]] & 0x3c: j = None   # not onto a moving floor
@@ -216,14 +216,14 @@ for d in path:
         else: toks.append([d[0], 1])
         toks.append(['|', 0]); continue
     if d == 'J': toks.append(['J', 0]); continue          # a jump
-    if d[0] == 'R' and len(d) == 2: toks.append(['R' + d[1], 0]); continue   # a ride
+    if d[0] == 'R' and ',' in d: toks.append([d, 0]); continue   # a ride
     if toks and toks[-1][0] == d: toks[-1][1] += 1
     else: toks.append([d, 1])
 out = []
 for d, n in toks:
     if d == '|': out.append('|')
     elif d == 'J': out.append('#J')
-    elif d[0] == 'R' and len(d) == 2: out.append('ride ' + d[1])
+    elif d[0] == 'R' and ',' in d: out.append(f'ride {d[1]} {d[2:]}')
     elif out and out[-1] not in ('|', '#J') and not out[-1].startswith('ride'): out[-1] += f' {d}{n}'
     else: out.append(f'go {d}{n}')
 lines = [('jump' if o == '#J' else o) for o in out if o != '|']
