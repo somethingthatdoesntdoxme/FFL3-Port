@@ -93,6 +93,7 @@ public:
     void music(int id) { queue(0, id); }
     void sfx(int id) { queue(1, id); }
     void render(float* out, int frames);   // interleaved stereo
+    void setSpeed(int n) { speed_ = n < 1 ? 1 : n; }   // fast-forward: driver frames per GB frame
     SoundDriver& driver() { return drv_; }
     Apu& apu() { return apu_; }
 
@@ -103,6 +104,7 @@ private:
     int req_[32][2] = {};
     int reqHead_ = 0, reqCount_ = 0;
     double toFrame_ = 0;
+    int speed_ = 1;
 };
 
 } // namespace ffl3

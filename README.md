@@ -179,7 +179,7 @@ Put your ROM next to the exe as `saga3.gb` (or pass the path / drag it onto the 
 It must be **Final Fantasy Legend III (U)**, MD5 `db156bc96b528996ce1bf771195171af`.
 
 ```
-ffl3 [rom.gb] [--map HEX] [--pos ROW,COL] [--wide] [--scale N]
+ffl3 [rom.gb] [--map HEX] [--pos ROW,COL] [--wide] [--scale N] [--ff 2-8]
      [--walk UDLRAW...] [--shot out.bmp] [--debug] [--dump-blocks out.bin]
      [--text ID]                                                    (headless/testing)
      [--battle HH [--keys ABUDLRW*] [--shot out.bmp] [--shot-at N] [--dump-view f]]
@@ -199,7 +199,21 @@ ffl3 [rom.gb] [--map HEX] [--pos ROW,COL] [--wide] [--scale N]
 | F4 | start a random battle for the current map |
 | PgUp / PgDn, `[` / `]` | previous / next map |
 | P | cycle palette (grey / DMG / Pocket) |
-| F12 | screenshot (BMP) |
+| ` (backquote), held | fast-forward (4× by default, `fast_forward` in ffl3.ini) |
+| Alt+Enter / F6 | fullscreen |
+| F11 | screenshot (BMP) |
+| F12 | bug report |
+
+**Gamepad** (any SDL-known controller, hot-pluggable): d-pad / left stick walk, south button A,
+east B, Start Start, north or Back the field menu, right shoulder or trigger held fast-forward.
+
+**Settings** live in `ffl3.ini` beside the exe: window scale, fullscreen, palette, widescreen and
+the fast-forward speed. The game writes it on exit when something changed (resize the window,
+press P, Tab or Alt+Enter); command-line flags override it for one run and aren't saved. Keys
+it doesn't know are kept.
+
+**No game data in the repo:** `tools/leakscan.py` fails on any run of 32+ bytes that also occurs
+in the ROM; `tools/leakscan.py --install-hook` makes it the pre-commit hook.
 
 ## Tests
 

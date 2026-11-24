@@ -10,6 +10,7 @@
 //       PgUp/PgDn ([ / ]) previous/next map, P palette, F12 screenshot, Esc quit.
 #include "dbgenv.h"
 #include "story.h"
+#include "settings.h"
 #include "render.h"
 #include "sound.h"
 #include "console.h"
@@ -115,6 +116,11 @@ int dirFromChar(char c) {
 
 } // namespace
 
+static bool storyOnArg(int argc, char** argv) {   // --story / --autotest runs ignore the fullscreen setting
+    for (int i = 1; i < argc; i++) if (std::string(argv[i]) == "--story" || std::string(argv[i]) == "--autotest") return true;
+    return false;
+}
+
 int main(int argc, char** argv) {
     std::string romPath = "saga3.gb", shot, dumpTiles, walk, savePath, loadPath;
     bool autotestArg = false;
@@ -131,6 +137,15 @@ int main(int argc, char** argv) {
     std::vector<int> setFlags;
     int wavId = 0;
     double wavSecs = 0;
+    // ffl3.ini beside the game (src/settings.h); flags below override it for this run only.
+    std::string iniPath = "ffl3.ini";
+    if (char* bp = SDL_GetBasePath()) { iniPath = std::string(bp) + "ffl3.ini"; SDL_free(bp); }
+    Settings settings;
+    const bool haveIni = settings.load(iniPath);
+    const Settings loaded = settings;
+    scale = settings.scale; wide = settings.wide;
+    int ffSpeed = settings.ffSpeed;
+    bool scaleArg = false, wideArg = false;
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
         if (a == "--map" && i + 1 < argc) mapId = int(std::strtol(argv[++i], nullptr, 16));
@@ -151,8 +166,9 @@ int main(int argc, char** argv) {
         else if (a == "--ram" && i + 1 < argc) ramPokes = argv[++i];     // ADDR:VAL,... into battle RAM
         else if (a == "--shot-at" && i + 1 < argc) shotAt = std::atoi(argv[++i]);
         else if (a == "--dump-blocks" && i + 1 < argc) dumpTiles = argv[++i];
-        else if (a == "--scale" && i + 1 < argc) scale = std::max(1, std::atoi(argv[++i]));
-        else if (a == "--wide") wide = true;
+        else if (a == "--scale" && i + 1 < argc) { scale = std::max(1, std::atoi(argv[++i])); scaleArg = true; }
+        else if (a == "--ff" && i + 1 < argc) ffSpeed = std::clamp(std::atoi(argv[++i]), 2, 8);
+        else if (a == "--wide") { wide = true; wideArg = true; }
         else if (a == "--debug") debug = true;
         else if (a == "--mute") mute = true;
         else if (a == "--wander") wanderOpt = true;
@@ -563,7 +579,7 @@ int main(int argc, char** argv) {
     RenderOpts opts;
     Frame frame;
     frame.resize(wide ? 256 : 160, 144);
-    int pal = 0;
+    int pal = settings.palette % kNumPalettes;
     std::vector<uint32_t> argb;
     std::vector<uint8_t> tint;
     int tilesVersion = -1;
@@ -921,6 +937,12 @@ int main(int argc, char** argv) {
 
     // ---- interactive ------------------------------------------------------------------
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { std::fprintf(stderr, "SDL: %s\n", SDL_GetError()); return 1; }
+    // Gamepads (SDL's controller database): d-pad / left stick move, south button A, east B,
+    // Start Start, north or Back opens the menu, right shoulder or trigger held = fast-forward.
+    SDL_GameController* pad = nullptr;
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == 0)
+        for (int i = 0; i < SDL_NumJoysticks() && !pad; i++)
+            if (SDL_IsGameController(i)) pad = SDL_GameControllerOpen(i);
     field.wander = true;
     // Audio: the sound driver + APU run in the SDL audio callback, one driver frame per GB frame.
     static std::unique_ptr<SoundSystem> sound;
@@ -945,7 +967,13 @@ int main(int argc, char** argv) {
     }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     SDL_Window* win = SDL_CreateWindow("FFL3", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                       frame.w * scale, frame.h * scale, SDL_WINDOW_RESIZABLE);
+                                       frame.w * scale, frame.h * scale, SDL_WINDOW_RESIZABLE |
+                                       (settings.fullscreen && !storyOnArg(argc, argv) ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+    bool fullscreen = settings.fullscreen;
+    auto toggleFullscreen = [&] {
+        fullscreen = !fullscreen;
+        SDL_SetWindowFullscreen(win, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    };
     SDL_Renderer* ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_Texture* tex = nullptr;
     int texW = 0, shotN = 0;
@@ -1498,6 +1526,16 @@ int main(int argc, char** argv) {
         }
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = false;
+            if (e.type == SDL_CONTROLLERDEVICEADDED && !pad) { pad = SDL_GameControllerOpen(e.cdevice.which); if (pad) notify("Gamepad connected", 120); }
+            if (e.type == SDL_CONTROLLERDEVICEREMOVED && pad &&
+                SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pad)) == e.cdevice.which) { SDL_GameControllerClose(pad); pad = nullptr; }
+            if (e.type == SDL_CONTROLLERBUTTONDOWN && !prompt && !testMenu &&
+                (e.cbutton.button == SDL_CONTROLLER_BUTTON_Y || e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)) {
+                if (!opening && !battle && !shop && !menu && !console && !text.active()) openMenu();
+                continue;
+            }
+            if (e.type == SDL_KEYDOWN && (e.key.keysym.sym == SDLK_F6 ||
+                (e.key.keysym.sym == SDLK_RETURN && (e.key.keysym.mod & KMOD_ALT)))) { toggleFullscreen(); continue; }
             if (prompt) {                                        // typing a tester command
                 if (e.type == SDL_TEXTINPUT) promptLine += e.text.text;
                 if (e.type != SDL_KEYDOWN) continue;
@@ -1602,9 +1640,18 @@ int main(int argc, char** argv) {
         }
         // Fixed 60 Hz game logic, like the GB.
         const Uint64 now = SDL_GetPerformanceCounter();
-        acc += double(now - last) / double(SDL_GetPerformanceFrequency());
+        const Uint8* kb = SDL_GetKeyboardState(nullptr);
+        const bool ff = atItem < 0 && !storyOn && !prompt && !testMenu &&
+                        (kb[SDL_SCANCODE_GRAVE] || (pad && (SDL_GameControllerGetButton(pad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) ||
+                                                            SDL_GameControllerGetAxis(pad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000)));
+        const int speed = ff ? ffSpeed : 1;
+        static int lastSpeed = 1;
+        if (speed != lastSpeed && sound) { SDL_LockAudioDevice(adev); sound->setSpeed(speed); SDL_UnlockAudioDevice(adev); }
+        lastSpeed = speed;
+        if (ff && (toast.empty() || toast[0] == '>')) { toast = ">> x" + std::to_string(speed); toastFrames = 2; }
+        acc += speed * double(now - last) / double(SDL_GetPerformanceFrequency());
         last = now;
-        if (acc > 0.25) acc = 0.25;
+        if (acc > 0.25 * speed) acc = 0.25 * speed;
         if (atItem >= 0 || storyOn) acc = 1.0 / 60.0;        // --autotest / --story: one frame per loop, as fast as it goes
         int steps = 0;                                           // logic frames this time round (for capture)
         while (acc >= 1.0 / 60.0) {
@@ -1633,6 +1680,21 @@ int main(int argc, char** argv) {
                 storyStartPrev = st;
                 k = synth;
                 if (story.finished()) { writeGrid((std::filesystem::path(storyDir) / "grid.txt").string()); running = false; }
+            }
+            static Uint8 merged[SDL_NUM_SCANCODES];
+            if (pad && atItem < 0 && !storyOn && !prompt && !testMenu) {   // the gamepad, as the keys it stands for
+                std::memcpy(merged, k, sizeof merged);
+                auto btn = [&](SDL_GameControllerButton b) { return SDL_GameControllerGetButton(pad, b) != 0; };
+                const int lx = SDL_GameControllerGetAxis(pad, SDL_CONTROLLER_AXIS_LEFTX), ly = SDL_GameControllerGetAxis(pad, SDL_CONTROLLER_AXIS_LEFTY);
+                const int dz = 16000;
+                if (btn(SDL_CONTROLLER_BUTTON_DPAD_UP) || ly < -dz) merged[SDL_SCANCODE_UP] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_DPAD_DOWN) || ly > dz) merged[SDL_SCANCODE_DOWN] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_DPAD_LEFT) || lx < -dz) merged[SDL_SCANCODE_LEFT] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_DPAD_RIGHT) || lx > dz) merged[SDL_SCANCODE_RIGHT] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_A)) merged[SDL_SCANCODE_Z] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_B)) merged[SDL_SCANCODE_X] = 1;
+                if (btn(SDL_CONTROLLER_BUTTON_START)) merged[SDL_SCANCODE_KP_ENTER] = 1;
+                k = merged;
             }
             int d = -1;
             if (k[SDL_SCANCODE_DOWN] || k[SDL_SCANCODE_S]) d = int(Dir::Down);
@@ -1846,6 +1908,18 @@ int main(int argc, char** argv) {
     }
     g_tap = nullptr;
     g_eventLog = nullptr;
+    if (atItem < 0 && !storyOn) {                                // ffl3.ini: what changed this run
+        Settings now = settings;
+        if (!scaleArg) {
+            int w = 0, h = 0;
+            if (!fullscreen) { SDL_GetWindowSize(win, &w, &h); if (h >= 144) now.scale = std::clamp((h + 72) / 144, 1, 12); }
+        }
+        now.fullscreen = fullscreen;
+        now.palette = pal;
+        if (!wideArg) now.wide = wide;
+        if (!haveIni || now != loaded) now.save(iniPath);
+    }
+    if (pad) SDL_GameControllerClose(pad);
     if (adev) SDL_CloseAudioDevice(adev);
     if (tex) SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);

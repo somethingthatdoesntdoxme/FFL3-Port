@@ -1,0 +1,41 @@
+name: CI
+
+# Builds Linux and the Windows cross-build on every push and pull request. No ROM here, so
+# only the build is checked; the ROM-gated suites (tests/run_all.py) run locally.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffl3-linux
+          path: build/ffl3
+
+  windows:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y mingw-w64
+      - run: cmake -S . -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build-win -j4 --target ffl3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffl3-windows
+          path: build-win/ffl3.exe

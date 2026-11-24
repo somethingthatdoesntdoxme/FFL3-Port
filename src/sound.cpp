@@ -687,7 +687,7 @@ void SoundSystem::render(float* out, int frames) {
                 reqHead_ = (reqHead_ + 1) % 32; reqCount_--;
                 if (r[0] == 0) drv_.music(r[1]); else drv_.sfx(r[1]);
             }
-            drv_.update();
+            for (int i = 0; i < speed_; i++) drv_.update();   // fast-forward: the music keeps up, same pitch
             toFrame_ += perFrame;
         }
         int n = std::min(frames, int(std::ceil(toFrame_)));

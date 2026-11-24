@@ -854,3 +854,5 @@ check prison_up
 keys S w40 D w10 A w30 A w30 A w30 A w30   # Magic: Exit (the leader's first spell)
 settle
 check exited_prison
+go D7 R4 U4 R11
+check darius2
