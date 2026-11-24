@@ -787,3 +787,53 @@ keys D w60 D w60 A w90                # X-Plane
 peek to_pureland
 keys A w400                           # yes: the warp
 check in_pureland
+
+== Pureland: Eitar (Catnip), Fenrir's prison
+go L8 U7 L1
+check pureland_7f
+go D1
+check back_to_pureland
+go D6 R3 U4 R11
+check darius
+go L1
+check darius_west
+go D4 L12 D2 L2
+check step_44_28
+go U7 L5 D3 L1 D1 L2 D1 L4 U9                       # north, west, through the broken fence, up the grass to the tree
+face U
+a                                     # check the tree: Catnip
+check catnip
+go D12
+check out_of_eitar
+go U8 R1
+check prison
+keys S w40 A w30 D w10 D w10 D w10 A w30 A w30   # Item: Catnip (map $7F, 0F:7CEC): "Aroma from Catnip filled the place."
+settle
+check catnip_used
+go U7 R7 U1 R2 U3
+keys U4 w30                           # shove the frozen BlackCat up a block
+go U1 R6 U16 L5 U2                    # 19,33
+check prison_19_33
+go D1 R1 D1 R2 D1 R1 D1 R1 D3 L12 D11 L2 U17   # under the grate, round and up to Fenrir (20,24)
+check before_fenrir
+heal
+boost 99                              # test helpers: Fenrir
+weaken on
+face U
+a                                     # Fenrir
+check after_fenrir
+weaken off
+go U1                                 # where Fenrir stood
+face L
+a                                     # the box: the Prison Key
+check prison_key
+go D18 R2 U11 R12 U6 L5 U2            # back to the prison door (19,33): "Used Prison Key."
+check prison_door
+go U1 R1 U2 R1 U2 R2 D2
+check prison_cells
+go D6 R1 D6 L5                        # along to the sleeping MummyCat (34,54)
+jump                                  # over it
+go U4                                 # into the cell
+face U
+a                                     # Faye
+check faye

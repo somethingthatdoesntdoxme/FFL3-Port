@@ -140,7 +140,8 @@ def ride(y, x, d):
     return None
 
 cur = [0, 0]
-start = (sr, sc, flags0, '')
+PUSH = '--push' in sys.argv                              # objects can be shoved (01:51FE, move $0B)
+start = (sr, sc, flags0, '', frozenset(objs))
 import heapq
 prev = {start: None}
 cost = {start: 0}
@@ -152,21 +153,28 @@ def push(st, frm, how, c):
     cost[st] = c; prev[st] = (frm, how); tie += 1; heapq.heappush(q, (c, tie, st))
 end = None
 while q:
+    if len(cost) > 400000: print('too many states', file=sys.stderr); break
     c0, _, cur_st = heapq.heappop(q)
     if c0 > cost.get(cur_st, 1 << 30): continue
-    y, x, f, face = cur_st
-    if (y, x) != (sr, sc) and is_goal(y, x): end = (y, x, f, face); break
+    y, x, f, face, O = cur_st
+    objs = set(O)                                         # where the objects are in this state
+    if (y, x) != (sr, sc) and is_goal(y, x): end = cur_st; break
     plain_exit = (A[y][x] & 0xc0) == 0xc0 and (A[y][x] & 0x3f) in (0, 1) and warp(y, x) is None
     passover = (A[y][x] & 0x3f) in (0x20, 0x21, 0x2d, 0x2e, 0x30, 0x31)   # damage / cure floors, no-ops
     if (y, x) != (sr, sc) and (A[y][x] & 0xc0) == 0xc0 and (A[y][x] & 0x3f) != 0x25 and not plain_exit and not passover:
         w = warp(y, x)                                    # same-map warp: carry on from where it lands
         if w and w[0] == m:
-            push((w[1] % H, w[2] % W, 0x47, ''), cur_st, '|', c0 + 1)
+            push((w[1] % H, w[2] % W, 0x47, '', O), cur_st, '|', c0 + 1)
         continue                                          # other events: stop
     for d, dy, dx in D:
         ny, nx = (y + dy) % H, (x + dx) % W
         ok, g = step(f, A[ny][nx])
-        if not ok or (ny, nx) in objs: continue
+        if not ok: continue
+        if (ny, nx) in objs:
+            py, px = (ny + dy) % H, (nx + dx) % W               # shove it one block on, if it fits there
+            if PUSH and step(0x47, A[py][px])[0] and (A[py][px] & 0xc0) != 0xc0 and (py, px) not in objs:
+                push((y, x, f, d, O - {(ny, nx)} | {(py, px)}), cur_st, 'P' + d, c0 + 3)
+            continue
         if (A[ny][nx] & 0xc0) == 0x80 and A[ny][nx] & 0x3c:   # a moving floor (01:4BF6): it carries you
             cy, cx, n, cf = ny, nx, 0, d                      # its way (attr & 3) to its end; a new `go`
             while (A[cy][cx] & 0xc0) == 0x80 and A[cy][cx] & 0x3c and n < 64:   # leg starts there
@@ -174,12 +182,12 @@ while q:
                 ty, tx = (cy + ky) % H, (cx + kx) % W
                 if not step(0x47, A[ty][tx])[0] or (ty, tx) in objs: break
                 cy, cx, n, cf = ty, tx, n + 1, 'URDL'[A[cy][cx] & 3]
-            push((cy, cx, 0x47, cf), cur_st, d + '|', c0 + 1)   # facing the way it carried you
+            push((cy, cx, 0x47, cf, O), cur_st, d + '|', c0 + 1)   # facing the way it carried you
             continue
-        push((ny, nx, g, d), cur_st, d, c0 + (6 if A[ny][nx] in (0xe0,) else 1))   # $20 hurts: avoid it
+        push((ny, nx, g, d, O), cur_st, d, c0 + (6 if A[ny][nx] in (0xe0,) else 1))   # $20 hurts: avoid it
     for d, dy, dx in D:                                   # `ride d`: hold d over moving floors
         r = ride(y, x, d)
-        if r: push((r[0], r[1], 0x47, r[2]), cur_st, f'R{d}{r[0]},{r[1]}', c0 + 2)
+        if r: push((r[0], r[1], 0x47, r[2], O), cur_st, f'R{d}{r[0]},{r[1]}', c0 + 2)
     if face:                                              # B: jump the way we face (01:47B2); costs more
         j = jump(y, x, f, face)
         if j and (A[j[0]][j[1]] & 0xc0) == 0x80 and A[j[0]][j[1]] & 0x3c: j = None   # not onto a moving floor
@@ -190,7 +198,7 @@ while q:
                 yy, xx = (yy + dy) % H, (xx + dx) % W
                 a = A[yy][xx]
                 g = 0x47 if (a & 0xc0) in (0xc0, 0x80) else layer(g, a)
-            push((j[0], j[1], g, face), cur_st, 'J', c0 + 4)
+            push((j[0], j[1], g, face, O), cur_st, 'J', c0 + 4)
 if goal[0] == 'list':                                     # every event block reachable, nearest first
     seen = {}
     for st, c in cost.items():
@@ -217,6 +225,7 @@ for d in path:
         toks.append(['|', 0]); continue
     if d == 'J': toks.append(['J', 0]); continue          # a jump
     if d[0] == 'R' and ',' in d: toks.append([d, 0]); continue   # a ride
+    if d[0] == 'P' and len(d) == 2: toks.append([d, 0]); continue  # a shove
     if toks and toks[-1][0] == d: toks[-1][1] += 1
     else: toks.append([d, 1])
 out = []
@@ -224,7 +233,8 @@ for d, n in toks:
     if d == '|': out.append('|')
     elif d == 'J': out.append('#J')
     elif d[0] == 'R' and ',' in d: out.append(f'ride {d[1]} {d[2:]}')
-    elif out and out[-1] not in ('|', '#J') and not out[-1].startswith('ride'): out[-1] += f' {d}{n}'
+    elif d[0] == 'P' and len(d) == 2: out.append(f'keys {d[1]}4 w30')
+    elif out and out[-1] not in ('|', '#J') and not out[-1].startswith(('ride', 'keys')): out[-1] += f' {d}{n}'
     else: out.append(f'go {d}{n}')
 lines = [('jump' if o == '#J' else o) for o in out if o != '|']
 print('\n'.join(lines) + f'   # -> {end[0]},{end[1]} attr {A[end[0]][end[1]]:02X}')
