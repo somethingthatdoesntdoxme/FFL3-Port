@@ -265,12 +265,21 @@ bool Field::canCast(uint8_t id) const {
         const Actor& p = actors_[0];
         return (attrAt(p.row + kDr[int(p.facing)], p.col + kDc[int(p.facing)]) & 0xe4) == 0x40;
     }
-    default: return false;                                        // $25 $1B $2C: not yet
+    case 0x1b: case 0x2c: return !hdr_.flag80 && exitSpot_.map >= 0;   // 422E: wCA6C clear (and somewhere to go)
+    default: return false;                                        // $25: not yet
     }
 }
 
 void Field::cast(uint8_t id) {
     if (id == 0x21) floatDrop_ = 36;                              // 4049 -> 4063 (40C2: $24 frames)
+    if (id == 0x1b || id == 0x2c) {                               // 41D6: Exit - back to wC7C9-CB facing
+        returnStack_.clear();                                     // wC6F7, the bubble on the sea bed; the
+        trans_ = kTransition;                                     // return stack goes (5F39: a wobble, sfx $1A)
+        enterMap(exitSpot_.map, exitSpot_.row, exitSpot_.col, exitFacing_);
+        if (exitSpot_.map >= 6 && exitSpot_.map <= 8) setVehicle(2);
+        lastEvent_ = "exit";
+        return;
+    }
     if (id == 0x20) {                                             // 40E1: a step onto the water (no wall
         startMove(0, actors_[0].facing, true, speedPx(leaderSpeed_));   // check), then 4182: vehicle 2
         stepVehicle_ = 2;
@@ -604,6 +613,11 @@ bool Field::warpTo(int map, uint8_t b2, uint8_t b3) {
     // 00:1468: wC6EE = (b3 bit7) << 7 | (b2 bit7) << 6; scroll = (b & $7F) * 16 px.
     // The leader stands $50 px (5 blocks) into the screen.
     const Dir f = Dir(((b3 >> 7) << 1) | (b2 >> 7));
+    if (map_ < 0x0a) {                                // 1B64: leaving a world map - remember the block
+        const Actor& p = actors_[0];                  // you came from, and the way back (wC6F7), for Exit
+        exitFacing_ = Dir((int(p.facing) + 2) & 3);
+        exitSpot_ = {map_, wrap(p.row + kDr[int(exitFacing_)], rows()), wrap(p.col + kDc[int(exitFacing_)], cols())};
+    }
     trans_ = kTransition;
     return enterMap(map, (b2 & 0x7f) + 5, (b3 & 0x7f) + 5, f);
 }

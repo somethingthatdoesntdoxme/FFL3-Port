@@ -172,7 +172,8 @@ while q:
         if not ok: continue
         if (ny, nx) in objs:
             py, px = (ny + dy) % H, (nx + dx) % W               # shove it one block on, if it fits there
-            if PUSH and step(0x47, A[py][px])[0] and (A[py][px] & 0xc0) != 0xc0 and (py, px) not in objs:
+            pa = A[py][px]                                    # 00:0FFD as the port's objectPassable
+            if PUSH and (pa == 0xeb or (pa & 0xc0) == 0x80 or ((pa & 0xc0) != 0xc0 and (pa & 0x45) == 0)) and (py, px) not in objs:
                 push((y, x, f, d, O - {(ny, nx)} | {(py, px)}), cur_st, 'P' + d, c0 + 3)
             continue
         if (A[ny][nx] & 0xc0) == 0x80 and A[ny][nx] & 0x3c:   # a moving floor (01:4BF6): it carries you

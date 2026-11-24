@@ -494,3 +494,10 @@ Translated in src/battleanim.cpp (C++20 coroutines; 00:3A6D "wait a frames" = co
 - Era flags at the warp home (01:6460): $0E on, $0F = flag $56 (set when Dogra is beaten); $0E
   and $0F both on is the Present after Dogra, where the Talon shrine's step text plays the
   Elder scene (needs flag $11 too: Lara joined).
+
+## Exit (spell $1B / $2C) - 01:41D6
+- 00:1B64 runs on every warp off a world map (map < $0A): wC7CB = map, wC6F7 = facing + 2 (the way back),
+  wC7C9/CA = the leader's block one step back that way (packed row/col). That's the Exit target.
+- 01:422E (menu check, rst18 $98): only usable with wCA6C (map header byte 0 bit 7) clear.
+- 01:41D6: 5F39 wobble, sfx $1A, warp to wC7C9-CB facing wC6F7; maps 6-8 put you in the Dive bubble;
+  wC7C8 = 0 (the return stack is dropped).

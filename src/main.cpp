@@ -840,7 +840,7 @@ int main(int argc, char** argv) {
                 MenuInput in;
                 in.a = c == 'A'; in.b = c == 'B'; in.up = c == 'U'; in.down = c == 'D';
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : (menu->fieldSpell() == 0x1b || menu->fieldSpell() == 0x2c) ? 0x1a : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
                 continue;
             }
             if (shop) {                                 // A / B / U / D drive an open shop
@@ -1676,7 +1676,7 @@ int main(int argc, char** argv) {
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;
                 in.left = left && !leftPrev; in.right = right && !rightPrev;
                 menu->tick(in);
-                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
+                if (menu->done()) { if (menu->fieldSpell()) { sndSfx(menu->fieldSpell() == 0x20 ? 0x27 : (menu->fieldSpell() == 0x1b || menu->fieldSpell() == 0x2c) ? 0x1a : 0x1f); field.cast(menu->fieldSpell()); } if (menu->keyText()) text.open(0xa, menu->keyText()); menu.reset(); }
             } else if (shop) {
                 ShopInput in;
                 in.a = aPressed; in.b = bHeld && !bPrev; in.up = up && !upPrev; in.down = down && !downPrev;

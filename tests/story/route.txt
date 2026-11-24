@@ -698,7 +698,15 @@ go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
 check tower_64
 go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
 check tower_65
-go U2 L3 D1 L1 D1 L1 D1 L1 D7 R1 D1 R5 U4
+go U2 R3 D1 R1 D1 R1 D1 R1 D7 L1 D1 L3   # the right-hand path to a box
+face D
+a                                     # Exit (for the way out of Fenrir's prison)
+check exit_spell
+keys S w40 A w30 D w10 D w10 D w10 D w10   # learn it (Item: the 5th slot, mark it, again, the leader)
+keys A w30 A w30 A w30
+keys A w30 B w30 B w30
+check exit_learnt
+go L2 U4                              # 24,31 -> map 66
 check tower_66
 heal
 boost 99                              # test helper: the fights ahead
@@ -837,3 +845,12 @@ go U4                                 # into the cell
 face U
 a                                     # Faye
 check faye
+
+== out of the prison, Darius's port to Knaya
+go D4 L1 R1
+jump
+go R5 U10 L1 U3
+check prison_up
+keys S w40 D w10 A w30 A w30 A w30 A w30   # Magic: Exit (the leader's first spell)
+settle
+check exited_prison

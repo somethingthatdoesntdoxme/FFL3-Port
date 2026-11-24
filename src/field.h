@@ -218,6 +218,8 @@ private:
     struct Return { int map, row, col; };
     std::vector<Return> returnStack_;  // wC7A0 / wC7C0
     Return saved_{-1, 0, 0};
+    Return exitSpot_{-1, 0, 0};       // wC7C9-CB: the world-map block you left last (00:1B64), for Exit
+    Dir exitFacing_ = Dir::Down;      // wC6F7
     int blocksVersion_ = 0;
     bool hideLeaderOnLoad_ = false;   // wCA00
     int holesFilled_ = 0;              // wCA01: boulders dropped this visit (event $2B)
