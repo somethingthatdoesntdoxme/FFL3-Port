@@ -501,3 +501,11 @@ Translated in src/battleanim.cpp (C++20 coroutines; 00:3A6D "wait a frames" = co
 - 01:422E (menu check, rst18 $98): only usable with wCA6C (map header byte 0 bit 7) clear.
 - 01:41D6: 5F39 wobble, sfx $1A, warp to wC7C9-CB facing wC6F7; maps 6-8 put you in the Dive bubble;
   wC7C8 = 0 (the return stack is dropped).
+
+## Pureland: the ship to Knaya
+- The Talon in Pureland is mode 3 (00:087A: mask $FF, walking pace) - it can't cross the sea, and the
+  cockpit's Engine has no unit for it. Map 01's own exit to map $96 (region 6,7) is on an island.
+- The way on is Darius (map $88): up the pier at the top (6,24), the sailor at 6,23 (text $9A):
+  flag $13 (set by Faye joining) -> "Ship to Knaya is departing, get on." (0A:6E6F), yes -> map $70 16,56;
+  without it "Ship to Knaya has to wait for the ocean to clear." The NPC at 12,11 stands in the direct
+  path ("We can't use Dive and Float for travelling.").

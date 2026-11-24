@@ -856,3 +856,8 @@ settle
 check exited_prison
 go D7 R4 U4 R11
 check darius2
+go R1 U1 R3 U1 R2 U1 R4 U1 R6 U4      # round the townsfolk, up the pier (the NE port)
+check darius_pier
+face L
+a                                     # the sailor: "Ship to Knaya is departing, get on." (flag $13) - yes, the ship
+check knaya                           # map 70, Knaya's harbour

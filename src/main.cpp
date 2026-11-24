@@ -589,8 +589,9 @@ int main(int argc, char** argv) {
     auto writeGrid = [&](const std::string& path) {
         FILE* gf = std::fopen(path.c_str(), "w");
         if (!gf) return;
-        std::fprintf(gf, "map %02X rows %d cols %d mask %02X flags %02X vehicle %d pos %d,%d\n", field.mapId(), field.rows(), field.cols(),
-                     field.vehicleMaskPublic(), field.leaderFlags(), field.vehicle(), field.player().row, field.player().col);
+        std::fprintf(gf, "map %02X rows %d cols %d mask %02X flags %02X vehicle %d pos %d,%d talon %02X %d,%d\n", field.mapId(), field.rows(), field.cols(),
+                     field.vehicleMaskPublic(), field.leaderFlags(), field.vehicle(), field.player().row, field.player().col,
+                     field.savedSpot().map & 0xff, field.savedSpot().row, field.savedSpot().col);
         for (int r = 0; r < field.rows(); r++) {
             for (int c = 0; c < field.cols(); c++) std::fprintf(gf, "%s%02X/%02X", c ? " " : "", field.blockAt(r, c), field.attrAt(r, c));
             std::fprintf(gf, "\n");
